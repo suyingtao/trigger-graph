@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
-    "vue": "^3.0.0"
+    "vue": "^3.0.0",
+    "vugel": "^1.0.19"
   },
   "devDependencies": {
     "@types/jest": "^24.0.19",
