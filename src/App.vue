@@ -135,8 +135,8 @@ export default defineComponent({
     });
     const scale = ref(1);
     const testNodes = testData.map(genNode);
-    const nodes: Ref<Node[]> = ref(testNodes);
-    const nodeMap = computed(() => new Map(nodes.value.map((i) => [i.id, i])));
+    const nodes: Node[] = reactive(testNodes);
+    const nodeMap = computed(() => new Map(nodes.map((i) => [i.id, i])));
     const moveNodeId: Ref<string | undefined> = ref();
     const activeId: Ref<string | undefined> = ref();
     const onMousemove = (e: MouseEvent) => {
@@ -153,7 +153,7 @@ export default defineComponent({
       }
     };
     const onMouseup = () => {
-      const node = nodes.value.find((i) => i.id === moveNodeId.value);
+      const node = nodes.find((i) => i.id === moveNodeId.value);
       if (node) {
         activeId.value = node!.id;
         node!.zIndex = 2;
@@ -161,7 +161,7 @@ export default defineComponent({
       moveNodeId.value = undefined;
     };
     const lines = computed(() => {
-      return nodes.value
+      return nodes
         .filter((node) => node.parentId)
         .map((node) => {
           const parentNode = nodeMap.value.get(node.parentId!);
@@ -178,7 +178,7 @@ export default defineComponent({
     const onClickAddChild = () => {
       if (!activeId.value) return;
       const node = nodeMap.value.get(activeId.value);
-      const children = nodes.value.filter((i) => i.parentId === activeId.value);
+      const children = nodes.filter((i) => i.parentId === activeId.value);
       const x = (() => {
         if (children.length) {
           return Math.max(...children.map((i) => i.x));
@@ -198,7 +198,7 @@ export default defineComponent({
         parentId: activeId.value,
         label: "new node",
       });
-      nodes.value.push(newNode);
+      nodes.push(newNode);
     };
     const onClickAddSibling = () => {
       if (!activeId.value) return;
@@ -207,7 +207,7 @@ export default defineComponent({
         return;
       }
       const parentNode = nodeMap.value.get(node.parentId);
-      const children = nodes.value.filter((i) => i.parentId === parentNode!.id);
+      const children = nodes.filter((i) => i.parentId === parentNode!.id);
       const x = (() => {
         if (children.length) {
           return Math.max(...children.map((i) => i.x));
@@ -227,7 +227,7 @@ export default defineComponent({
         parentId: parentNode!.id,
         label: "new node",
       });
-      nodes.value.push(newNode);
+      nodes.push(newNode);
     };
     const onClickAddParent = () => {
       if (!activeId.value) return;
@@ -242,12 +242,12 @@ export default defineComponent({
       });
       if (parentId) newParentNode.parentId = parentId;
       node.parentId = newParentNode.id;
-      nodes.value.push(newParentNode);
+      nodes.push(newParentNode);
     };
 
     watch(activeId, (curr, prev) => {
       if (!prev) return;
-      const node = nodes.value.find((i) => i.id === prev);
+      const node = nodes.find((i) => i.id === prev);
       if (node) {
         node.zIndex = 1;
       }

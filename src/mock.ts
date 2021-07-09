@@ -4,7 +4,7 @@ export const testData = [
     x: 400,
     y: 500,
     label: "node1",
-    zIndex: 10,
+    zIndex: 1,
   },
   {
     id: "node_2",
@@ -12,7 +12,7 @@ export const testData = [
     x: 550,
     y: 500,
     label: "node2",
-    zIndex: 10,
+    zIndex: 1,
   },
   {
     id: "node_3",
@@ -20,7 +20,7 @@ export const testData = [
     x: 700,
     y: 400,
     label: "node3",
-    zIndex: 10,
+    zIndex: 1,
   },
   {
     id: "node_4",
@@ -28,6 +28,6 @@ export const testData = [
     x: 700,
     y: 600,
     label: "node4",
-    zIndex: 10,
+    zIndex: 1,
   },
 ];
