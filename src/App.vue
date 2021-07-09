@@ -79,7 +79,6 @@
 </template>
 
 <script lang="ts">
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { computed, defineComponent, reactive, Ref, ref, watch } from "vue";
 import { Vugel } from "vugel";
 import TriggerNode from "./components/TriggerNode.vue";
@@ -90,7 +89,7 @@ import { genLine } from "./core/Line";
 import Button from "./components/Button.vue";
 
 const testNodes = testData.map(genNode);
-
+const STORAGE_KEY = "__NODES_DATA__";
 export default defineComponent({
   name: "App",
   components: { Vugel, TriggerNode, Lines, Button },
@@ -107,9 +106,9 @@ export default defineComponent({
     const onMousemove = (e: MouseEvent) => {
       const { movementY, movementX } = e;
       if (moveNodeId.value) {
-        const node = nodeMap.value.get(moveNodeId.value);
-        node!.x += movementX / scale.value;
-        node!.y += movementY / scale.value;
+        const node = nodeMap.value.get(moveNodeId.value) as Node;
+        node.x += movementX / scale.value;
+        node.y += movementY / scale.value;
         return;
       }
       if (e.buttons === 1) {
@@ -120,34 +119,34 @@ export default defineComponent({
     const onMouseup = () => {
       const node = nodes.find((i) => i.id === moveNodeId.value);
       if (node) {
-        activeId.value = node!.id;
-        node!.zIndex = 2;
+        activeId.value = node.id;
+        node.zIndex = 2;
       }
       moveNodeId.value = undefined;
     };
     const lines = computed(() => {
-      return nodes
-        .filter((node) => node.parentId)
-        .map((node) => {
-          const parentNode = nodeMap.value.get(node.parentId!);
-          return genLine(node, parentNode!);
-        });
+      return (nodes.filter((node) => node.parentId) as Required<Node>[]).map(
+        (node) => {
+          const parentNode = nodeMap.value.get(node.parentId) as Node;
+          return genLine(node, parentNode);
+        }
+      );
     });
     const onClickAddChild = () => {
       if (!activeId.value) return;
-      const node = nodeMap.value.get(activeId.value);
+      const node = nodeMap.value.get(activeId.value) as Node;
       const children = nodes.filter((i) => i.parentId === activeId.value);
       const x = (() => {
         if (children.length) {
           return Math.max(...children.map((i) => i.x));
         }
-        return node!.x + 100;
+        return node.x + 100;
       })();
       const y = (() => {
         if (children.length) {
           return Math.max(...children.map((i) => i.y)) + 50;
         }
-        return node!.y - 50;
+        return node.y - 50;
       })();
       const newNode = genNode({
         x,
@@ -164,25 +163,25 @@ export default defineComponent({
       if (!node?.parentId) {
         return;
       }
-      const parentNode = nodeMap.value.get(node.parentId);
-      const children = nodes.filter((i) => i.parentId === parentNode!.id);
+      const parentNode = nodeMap.value.get(node.parentId) as Node;
+      const children = nodes.filter((i) => i.parentId === parentNode.id);
       const x = (() => {
         if (children.length) {
           return Math.max(...children.map((i) => i.x));
         }
-        return node!.x + 100;
+        return node.x + 100;
       })();
       const y = (() => {
         if (children.length) {
           return Math.max(...children.map((i) => i.y)) + 50;
         }
-        return node!.y - 50;
+        return node.y - 50;
       })();
       const newNode = genNode({
         x,
         y,
         zIndex: 1,
-        parentId: parentNode!.id,
+        parentId: parentNode.id,
         label: "new node",
       });
       nodes.push(newNode);
@@ -212,11 +211,11 @@ export default defineComponent({
     });
 
     const onClickSaveData = () => {
-      localStorage.setItem("__NODES_DATA__", JSON.stringify(nodes));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nodes));
     };
 
     const onClickLoadData = () => {
-      const data = localStorage.getItem("__NODES_DATA__");
+      const data = localStorage.getItem(STORAGE_KEY);
       if (data) {
         const nodesData: Node[] = JSON.parse(data);
         console.log(nodesData);
@@ -238,6 +237,7 @@ export default defineComponent({
           }
         }
       }
+      activeId.value = undefined;
     };
 
     return {
