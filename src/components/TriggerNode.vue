@@ -20,19 +20,17 @@ export default defineComponent({
   props: {
     x: { type: Number, default: 0 },
     y: { type: Number, default: 0 },
-    id: { type: Number, default: 0 },
+    id: { type: String, required: true },
     label: { type: String, default: "empty" },
     isMoving: { type: Boolean, default: false },
     setMoveNodeId: {
       required: true,
-      type: Function as PropType<(id: number) => void>,
-      default: (id: number) => undefined,
+      type: Function as PropType<(id: string) => void>,
     },
     isActive: { type: Boolean, default: false },
     setActiveId: {
       required: true,
-      type: Function as PropType<(id: number) => void>,
-      default: (id: number) => undefined,
+      type: Function as PropType<(id: string) => void>,
     },
   },
   setup(props) {

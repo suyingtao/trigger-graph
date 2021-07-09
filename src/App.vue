@@ -118,13 +118,13 @@
 
 <script lang="ts">
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { computed, defineComponent, reactive, ref, watch } from "vue";
+import { computed, defineComponent, reactive, Ref, ref, watch } from "vue";
 import { Vugel } from "vugel";
 import TriggerNode from "./components/TriggerNode.vue";
 import Lines from "./components/Lines.vue";
 import { testData } from "./mock";
+import { genNode, Node } from "./core/Node";
 
-let growthId = 100;
 export default defineComponent({
   name: "App",
   components: { Vugel, TriggerNode, Lines },
@@ -134,10 +134,11 @@ export default defineComponent({
       y: 0,
     });
     const scale = ref(1);
-    const nodes = ref(testData);
+    const testNodes = testData.map(genNode);
+    const nodes: Ref<Node[]> = ref(testNodes);
     const nodeMap = computed(() => new Map(nodes.value.map((i) => [i.id, i])));
-    const moveNodeId = ref();
-    const activeId = ref();
+    const moveNodeId: Ref<string | undefined> = ref();
+    const activeId: Ref<string | undefined> = ref();
     const onMousemove = (e: MouseEvent) => {
       const { movementY, movementX } = e;
       if (moveNodeId.value) {
@@ -163,7 +164,7 @@ export default defineComponent({
       return nodes.value
         .filter((node) => node.parentId)
         .map((node) => {
-          const parentNode = nodeMap.value.get(node.parentId as number);
+          const parentNode = nodeMap.value.get(node.parentId!);
           return {
             id: node.id,
             parentId: node.parentId,
@@ -190,14 +191,14 @@ export default defineComponent({
         }
         return node!.y - 50;
       })();
-      nodes.value.push({
-        id: ++growthId,
+      const newNode = genNode({
         x,
         y,
         zIndex: 1,
         parentId: activeId.value,
         label: "new node",
       });
+      nodes.value.push(newNode);
     };
     const onClickAddSibling = () => {
       if (!activeId.value) return;
@@ -219,41 +220,27 @@ export default defineComponent({
         }
         return node!.y - 50;
       })();
-      nodes.value.push({
-        id: ++growthId,
+      const newNode = genNode({
         x,
         y,
         zIndex: 1,
         parentId: parentNode!.id,
         label: "new node",
       });
+      nodes.value.push(newNode);
     };
     const onClickAddParent = () => {
       if (!activeId.value) return;
       const node = nodeMap.value.get(activeId.value);
       if (!node) return;
       const parentId = node.parentId;
-      if (!parentId) {
-        const newParentNode = {
-          id: ++growthId,
-          x: node.x - 100,
-          y: node.y,
-          zIndex: 1,
-          label: "new node",
-        };
-        node.parentId = newParentNode.id;
-        nodes.value.push(newParentNode);
-        return;
-      }
-
-      const newParentNode = {
-        id: ++growthId,
+      const newParentNode = genNode({
         x: node.x - 100,
         y: node.y,
         zIndex: 1,
         label: "new node",
-        parentId,
-      };
+      });
+      if (parentId) newParentNode.parentId = parentId;
       node.parentId = newParentNode.id;
       nodes.value.push(newParentNode);
     };
