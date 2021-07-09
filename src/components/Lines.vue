@@ -9,7 +9,8 @@ import { DrawingFunctionOptions } from "tree2d";
 import { defineComponent, PropType, Ref, ref, watch } from "vue";
 import type { Drawing } from "vugel";
 
-const NODE_HEIGHT = 14 + 8 * 2;
+const OFFSET_Y = 15;
+const OFFSET_X = 50;
 
 export default defineComponent({
   props: {
@@ -39,19 +40,16 @@ export default defineComponent({
         ctx.scale(props.scale, props.scale);
         props.lines.forEach((line) => {
           ctx.beginPath();
-          ctx.moveTo(
-            line.x + props.stageX,
-            line.y + NODE_HEIGHT / 2 + props.stageY
-          );
+          ctx.moveTo(line.x + props.stageX, line.y + OFFSET_Y + props.stageY);
           ctx.strokeStyle = "grey";
           ctx.lineWidth = 2;
           ctx.bezierCurveTo(
             line.x + props.stageX,
-            line.y + NODE_HEIGHT / 2 + props.stageY,
-            line.parentX + 50 + props.stageX,
-            line.y + NODE_HEIGHT / 2 + props.stageY,
-            line.parentX + 50 + props.stageX,
-            line.parentY + NODE_HEIGHT / 2 + props.stageY
+            line.y + OFFSET_Y + props.stageY,
+            line.parentX + OFFSET_X + props.stageX,
+            line.y + OFFSET_Y + props.stageY,
+            line.parentX + OFFSET_X + props.stageX,
+            line.parentY + OFFSET_Y + props.stageY
           );
           ctx.stroke();
         });
