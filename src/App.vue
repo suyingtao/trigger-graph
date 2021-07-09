@@ -41,6 +41,8 @@
         <Button @click="onClickDel" :disable="!activeId" label="delete" />
         <Button @click="onClickSaveData" label="save data" />
         <Button @click="onClickLoadData" label="load data" />
+        <Button @click="undo" label="undo" :disable="!canUndo" />
+        <Button @click="redo" label="redo" :disable="!canRedo" />
       </container>
     </container>
     <Lines
@@ -79,7 +81,15 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, reactive, Ref, ref, watch } from "vue";
+import {
+  computed,
+  defineComponent,
+  reactive,
+  Ref,
+  ref,
+  unref,
+  watch,
+} from "vue";
 import { Vugel } from "vugel";
 import TriggerNode from "./components/TriggerNode.vue";
 import Lines from "./components/Lines.vue";
@@ -87,9 +97,9 @@ import { testData } from "./mock";
 import { genNode, Node } from "./core/Node";
 import { genLine } from "./core/Line";
 import Button from "./components/Button.vue";
-
-const testNodes = testData.map(genNode);
+import { useDebounceFn, useManualRefHistory } from "@vueuse/core";
 const STORAGE_KEY = "__NODES_DATA__";
+
 export default defineComponent({
   name: "App",
   components: { Vugel, TriggerNode, Lines, Button },
@@ -99,8 +109,13 @@ export default defineComponent({
       y: 0,
     });
     const scale = ref(1);
-    const nodes: Node[] = reactive(testNodes);
-    const nodeMap = computed(() => new Map(nodes.map((i) => [i.id, i])));
+    const nodes: Ref<Node[]> = ref(testData.map(genNode));
+    const { commit, undo, redo, canUndo, canRedo, clear, reset } =
+      useManualRefHistory(nodes, { clone: true, capacity: 20 });
+    const debouncedCommit = useDebounceFn(() => {
+      commit();
+    }, 300);
+    const nodeMap = computed(() => new Map(unref(nodes).map((i) => [i.id, i])));
     const moveNodeId: Ref<string | undefined> = ref();
     const activeId: Ref<string | undefined> = ref();
     const onMousemove = (e: MouseEvent) => {
@@ -117,25 +132,28 @@ export default defineComponent({
       }
     };
     const onMouseup = () => {
-      const node = nodes.find((i) => i.id === moveNodeId.value);
+      const node = unref(nodes).find((i) => i.id === moveNodeId.value);
       if (node) {
         activeId.value = node.id;
         node.zIndex = 2;
+        debouncedCommit();
       }
       moveNodeId.value = undefined;
     };
     const lines = computed(() => {
-      return (nodes.filter((node) => node.parentId) as Required<Node>[]).map(
-        (node) => {
-          const parentNode = nodeMap.value.get(node.parentId) as Node;
-          return genLine(node, parentNode);
-        }
-      );
+      return (
+        unref(nodes).filter((node) => node.parentId) as Required<Node>[]
+      ).map((node) => {
+        const parentNode = nodeMap.value.get(node.parentId) as Node;
+        return genLine(node, parentNode);
+      });
     });
     const onClickAddChild = () => {
       if (!activeId.value) return;
       const node = nodeMap.value.get(activeId.value) as Node;
-      const children = nodes.filter((i) => i.parentId === activeId.value);
+      const children = unref(nodes).filter(
+        (i) => i.parentId === activeId.value
+      );
       const x = (() => {
         if (children.length) {
           return Math.max(...children.map((i) => i.x));
@@ -155,7 +173,8 @@ export default defineComponent({
         parentId: activeId.value,
         label: "new node",
       });
-      nodes.push(newNode);
+      unref(nodes).push(newNode);
+      debouncedCommit();
     };
     const onClickAddSibling = () => {
       if (!activeId.value) return;
@@ -164,7 +183,7 @@ export default defineComponent({
         return;
       }
       const parentNode = nodeMap.value.get(node.parentId) as Node;
-      const children = nodes.filter((i) => i.parentId === parentNode.id);
+      const children = unref(nodes).filter((i) => i.parentId === parentNode.id);
       const x = (() => {
         if (children.length) {
           return Math.max(...children.map((i) => i.x));
@@ -184,7 +203,8 @@ export default defineComponent({
         parentId: parentNode.id,
         label: "new node",
       });
-      nodes.push(newNode);
+      unref(nodes).push(newNode);
+      debouncedCommit();
     };
     const onClickAddParent = () => {
       if (!activeId.value) return;
@@ -199,45 +219,50 @@ export default defineComponent({
       });
       if (parentId) newParentNode.parentId = parentId;
       node.parentId = newParentNode.id;
-      nodes.push(newParentNode);
+      unref(nodes).push(newParentNode);
+      debouncedCommit();
     };
 
     watch(activeId, (curr, prev) => {
       if (!prev) return;
-      const node = nodes.find((i) => i.id === prev);
+      const node = unref(nodes).find((i) => i.id === prev);
       if (node) {
         node.zIndex = 1;
       }
     });
 
     const onClickSaveData = () => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(nodes));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(unref(nodes)));
     };
 
     const onClickLoadData = () => {
       const data = localStorage.getItem(STORAGE_KEY);
       if (data) {
+        activeId.value = undefined;
         const nodesData: Node[] = JSON.parse(data);
-        console.log(nodesData);
-        nodes.splice(0, nodes.length, ...nodesData);
+        unref(nodes).splice(0, unref(nodes).length, ...nodesData);
+        commit();
+        reset();
+        clear();
       }
     };
 
     const onClickDel = () => {
-      const index = nodes.findIndex((i) => i.id === activeId.value);
-      nodes.splice(index, 1);
+      const index = unref(nodes).findIndex((i) => i.id === activeId.value);
+      unref(nodes).splice(index, 1);
       const removedIds = [activeId.value];
       while (removedIds.length) {
         const curr = removedIds.shift();
-        for (let i = 0; i < nodes.length; i++) {
-          if (nodes[i].parentId === curr) {
-            removedIds.push(nodes[i].id);
-            nodes.splice(i, 1);
+        for (let i = 0; i < unref(nodes).length; i++) {
+          if (unref(nodes)[i].parentId === curr) {
+            removedIds.push(unref(nodes)[i].id);
+            unref(nodes).splice(i, 1);
             i--;
           }
         }
       }
       activeId.value = undefined;
+      debouncedCommit();
     };
 
     return {
@@ -256,6 +281,10 @@ export default defineComponent({
       onClickSaveData,
       onClickLoadData,
       onClickDel,
+      undo,
+      redo,
+      canUndo,
+      canRedo,
     };
   },
 });

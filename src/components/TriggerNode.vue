@@ -1,5 +1,9 @@
 <template>
-  <container @mousedown="onMousedown" @click="onClick">
+  <container
+    @mousedown="() => setMoveNodeId(id)"
+    @click="() => setActiveId(id)"
+    @dblclick="onDbClick"
+  >
     <styled-rectangle
       :x="x"
       :y="y"
@@ -34,13 +38,11 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const onMousedown = () => {
-      props.setMoveNodeId(props.id);
-    };
-    const onClick = () => {
+    const onDbClick = () => {
+      console.log(1234);
       props.setActiveId(props.id);
     };
-    return { onMousedown, onClick };
+    return { onDbClick };
   },
 });
 </script>
