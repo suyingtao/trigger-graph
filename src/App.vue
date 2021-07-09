@@ -23,6 +23,8 @@
           @click="scale = Math.max(0.1, (scale * 10 - 1) / 10)"
           label="-scale"
         />
+      </container>
+      <container :flex="true" :margin-top="10">
         <Button
           @click="onClickAddParent"
           :disable="!activeId"
@@ -39,8 +41,12 @@
           label="add child"
         />
         <Button @click="onClickDel" :disable="!activeId" label="delete" />
+      </container>
+      <container :flex="true" :margin-top="10">
         <Button @click="onClickSaveData" label="save data" />
         <Button @click="onClickLoadData" label="load data" />
+      </container>
+      <container :flex="true" :margin-top="10">
         <Button @click="undo" label="undo" :disable="!canUndo" />
         <Button @click="redo" label="redo" :disable="!canRedo" />
       </container>
@@ -94,7 +100,7 @@ import { Vugel } from "vugel";
 import TriggerNode from "./components/TriggerNode.vue";
 import Lines from "./components/Lines.vue";
 import { testData } from "./mock";
-import { genNode, Node } from "./core/Node";
+import { genNode, Node, NodeIdGenerator, NODE_ID_PREFIX } from "./core/Node";
 import { genLine } from "./core/Line";
 import Button from "./components/Button.vue";
 import { useDebounceFn, useManualRefHistory } from "@vueuse/core";
@@ -240,6 +246,12 @@ export default defineComponent({
       if (data) {
         activeId.value = undefined;
         const nodesData: Node[] = JSON.parse(data);
+        const maxId = Math.max(
+          ...nodesData.map((node) =>
+            Number(node.id.slice(NODE_ID_PREFIX.length))
+          )
+        );
+        NodeIdGenerator.setId(maxId);
         unref(nodes).splice(0, unref(nodes).length, ...nodesData);
         commit();
         reset();

@@ -9,4 +9,8 @@ export class IdGenerator {
     const { prefix } = this;
     return prefix + ++this.id;
   }
+
+  setId(id: number) {
+    this.id = id;
+  }
 }

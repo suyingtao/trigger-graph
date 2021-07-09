@@ -1,6 +1,7 @@
 import { IdGenerator } from "@/utils/IdGenerator";
 
-export const NodeIdGenerator = new IdGenerator("node_");
+export const NODE_ID_PREFIX = "node_";
+export const NodeIdGenerator = new IdGenerator(NODE_ID_PREFIX);
 
 export interface Node {
   id: string;
