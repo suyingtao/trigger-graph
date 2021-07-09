@@ -15,70 +15,32 @@
       }}</text>
       <text :font-size="14" :font-weight="600">{{ "scale:" + scale }}</text>
       <container :flex="true" :margin-top="10">
-        <styled-rectangle
-          :flex="true"
-          :flex-grow="0"
-          :padding="4"
-          :radius="8"
-          :stroke-width="5"
-          stroke-color="#000"
-          :z-index="100"
+        <Button
           @click="scale = Math.min(10, (scale * 10 + 1) / 10)"
-        >
-          <text :font-size="14" :font-weight="600">+scale</text>
-        </styled-rectangle>
-        <styled-rectangle
-          :flex="true"
-          :flex-grow="0"
-          :padding="4"
-          :radius="8"
-          :margin-left="10"
-          :stroke-width="5"
-          stroke-color="#000"
-          :z-index="100"
+          label="+scale"
+        />
+        <Button
           @click="scale = Math.max(0.1, (scale * 10 - 1) / 10)"
-        >
-          <text :font-size="14" :font-weight="600">-scale</text>
-        </styled-rectangle>
-        <styled-rectangle
-          :flex="true"
-          :flex-grow="0"
-          :padding="4"
-          :radius="8"
-          :margin-left="10"
-          :stroke-width="5"
-          stroke-color="#000"
-          :z-index="100"
+          label="-scale"
+        />
+        <Button
           @click="onClickAddParent"
-        >
-          <text :font-size="14" :font-weight="600">add parent</text>
-        </styled-rectangle>
-        <styled-rectangle
-          :flex="true"
-          :flex-grow="0"
-          :margin-left="10"
-          :padding="4"
-          :radius="8"
-          :stroke-width="5"
-          stroke-color="#000"
-          :z-index="100"
+          :disable="!activeId"
+          label="add parent"
+        />
+        <Button
           @click="onClickAddSibling"
-        >
-          <text :font-size="14" :font-weight="600">add sibling</text>
-        </styled-rectangle>
-        <styled-rectangle
-          :flex="true"
-          :flex-grow="0"
-          :margin-left="10"
-          :padding="4"
-          :radius="8"
-          :stroke-width="5"
-          stroke-color="#000"
-          :z-index="100"
+          :disable="!activeId"
+          label="add sibling"
+        />
+        <Button
           @click="onClickAddChild"
-        >
-          <text :font-size="14" :font-weight="600">add child</text>
-        </styled-rectangle>
+          :disable="!activeId"
+          label="add child"
+        />
+        <Button @click="onClickDel" :disable="!activeId" label="delete" />
+        <Button @click="onClickSaveData" label="save data" />
+        <Button @click="onClickLoadData" label="load data" />
       </container>
     </container>
     <Lines
@@ -125,17 +87,19 @@ import Lines from "./components/Lines.vue";
 import { testData } from "./mock";
 import { genNode, Node } from "./core/Node";
 import { genLine } from "./core/Line";
+import Button from "./components/Button.vue";
+
+const testNodes = testData.map(genNode);
 
 export default defineComponent({
   name: "App",
-  components: { Vugel, TriggerNode, Lines },
+  components: { Vugel, TriggerNode, Lines, Button },
   setup() {
     const stageOffset = reactive({
       x: 0,
       y: 0,
     });
     const scale = ref(1);
-    const testNodes = testData.map(genNode);
     const nodes: Node[] = reactive(testNodes);
     const nodeMap = computed(() => new Map(nodes.map((i) => [i.id, i])));
     const moveNodeId: Ref<string | undefined> = ref();
@@ -247,6 +211,35 @@ export default defineComponent({
       }
     });
 
+    const onClickSaveData = () => {
+      localStorage.setItem("__NODES_DATA__", JSON.stringify(nodes));
+    };
+
+    const onClickLoadData = () => {
+      const data = localStorage.getItem("__NODES_DATA__");
+      if (data) {
+        const nodesData: Node[] = JSON.parse(data);
+        console.log(nodesData);
+        nodes.splice(0, nodes.length, ...nodesData);
+      }
+    };
+
+    const onClickDel = () => {
+      const index = nodes.findIndex((i) => i.id === activeId.value);
+      nodes.splice(index, 1);
+      const removedIds = [activeId.value];
+      while (removedIds.length) {
+        const curr = removedIds.shift();
+        for (let i = 0; i < nodes.length; i++) {
+          if (nodes[i].parentId === curr) {
+            removedIds.push(nodes[i].id);
+            nodes.splice(i, 1);
+            i--;
+          }
+        }
+      }
+    };
+
     return {
       stageOffset,
       scale,
@@ -260,6 +253,9 @@ export default defineComponent({
       onClickAddChild,
       onClickAddParent,
       onClickAddSibling,
+      onClickSaveData,
+      onClickLoadData,
+      onClickDel,
     };
   },
 });
