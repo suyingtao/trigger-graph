@@ -92,14 +92,6 @@
       :y="stageOffset.y * scale"
       :scale="scale"
     >
-      <!-- <Line
-        v-for="i in lines"
-        :key="'line:' + i.id"
-        v-bind="i"
-        :stageX="stageOffset.x"
-        :stageY="stageOffset.y"
-        :scale="scale"
-      /> -->
       <TriggerNode
         v-for="i in nodes"
         :key="'node:' + i.id"

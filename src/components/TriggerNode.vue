@@ -15,7 +15,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, PropType } from "vue";
 export default defineComponent({
   props: {
     x: { type: Number, default: 0 },
@@ -25,13 +25,13 @@ export default defineComponent({
     isMoving: { type: Boolean, default: false },
     setMoveNodeId: {
       required: true,
-      type: Function,
+      type: Function as PropType<(id: number) => void>,
       default: (id: number) => undefined,
     },
     isActive: { type: Boolean, default: false },
     setActiveId: {
       required: true,
-      type: Function,
+      type: Function as PropType<(id: number) => void>,
       default: (id: number) => undefined,
     },
   },
