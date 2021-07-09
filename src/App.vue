@@ -124,6 +124,7 @@ import TriggerNode from "./components/TriggerNode.vue";
 import Lines from "./components/Lines.vue";
 import { testData } from "./mock";
 import { genNode, Node } from "./core/Node";
+import { genLine } from "./core/Line";
 
 export default defineComponent({
   name: "App",
@@ -165,14 +166,7 @@ export default defineComponent({
         .filter((node) => node.parentId)
         .map((node) => {
           const parentNode = nodeMap.value.get(node.parentId!);
-          return {
-            id: node.id,
-            parentId: node.parentId,
-            x: node.x,
-            y: node.y,
-            parentX: parentNode!.x,
-            parentY: parentNode!.y,
-          };
+          return genLine(node, parentNode!);
         });
     });
     const onClickAddChild = () => {
