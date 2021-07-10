@@ -7,13 +7,13 @@
     @mouseleave="onMouseleave"
   >
     <container x="20" y="20" :flex="true" flex-direction="column">
-      <text :font-size="14" :font-weight="600" :z-index="100">{{
+      <text :font-size="14" :font-weight="400" :z-index="100">{{
         "moving node id:" + moveNodeId
       }}</text>
-      <text :font-size="14" :font-weight="600" :z-index="100">{{
+      <text :font-size="14" :font-weight="400" :z-index="100">{{
         "selected node id:" + activeId
       }}</text>
-      <text :font-size="14" :font-weight="600">{{ "scale:" + scale }}</text>
+      <text :font-size="14" :font-weight="400">{{ "scale:" + scale }}</text>
       <container :flex="true" :margin-top="10">
         <Button
           @click="scale = Math.min(10, (scale * 10 + 1) / 10)"
