@@ -1,9 +1,6 @@
 export class IdGenerator {
   id = 0;
-  prefix = "";
-  constructor(prefix: string) {
-    this.prefix = prefix;
-  }
+  constructor(private prefix: string) {}
 
   getNewId() {
     const { prefix } = this;

@@ -10,10 +10,10 @@
       :flex="true"
       :padding="8"
       :radius="8"
-      :stroke-width="isActive ? 8 : 5"
+      :stroke-width="isActive ? 6 : 4"
       :stroke-color="isActive ? '#ff3300' : '#0099ff'"
     >
-      <text :font-size="14" :font-weight="600">{{ label }}</text>
+      <text :font-size="14" :font-weight="400">{{ label }}</text>
     </styled-rectangle>
   </container>
 </template>
