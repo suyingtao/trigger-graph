@@ -152,9 +152,9 @@ export default defineComponent({
       while (currId) {
         const currNode = unref(nodes).find((node) => node.id === currId);
         if (!currNode) return;
-        const children = unref(nodes).filter(
-          (node) => node.parentId === currId
-        );
+        const children = unref(nodes)
+          .filter((node) => node.parentId === currId)
+          .sort((a, b) => b.y - a.y);
         const count = children.length;
         children.forEach((child, i) => {
           child.x = currNode.x + OFFSET_X;
