@@ -211,6 +211,7 @@ export default defineComponent({
         label: "new node",
       });
       unref(nodes).push(newNode);
+      unref(autoLayout) && layout(node.id);
       debouncedCommit();
     };
 
@@ -242,6 +243,7 @@ export default defineComponent({
         label: "new node",
       });
       unref(nodes).push(newNode);
+      unref(autoLayout) && layout(parentNode.id);
       debouncedCommit();
     };
     const onClickAddParent = () => {
@@ -258,6 +260,7 @@ export default defineComponent({
       if (parentId) newParentNode.parentId = parentId;
       node.parentId = newParentNode.id;
       unref(nodes).push(newParentNode);
+      unref(autoLayout) && layout(parentId || node.parentId);
       debouncedCommit();
     };
 
