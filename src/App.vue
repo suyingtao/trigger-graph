@@ -41,6 +41,11 @@
           label="add child"
         />
         <Button @click="onClickDel" :disable="!activeId" label="delete" />
+        <Button @click="onClickLayout" :disable="!activeId" label="layout" />
+        <Button
+          @click="autoLayout = !autoLayout"
+          :label="autoLayout ? 'stop auto layout' : 'start auto layout'"
+        />
       </container>
       <container :flex="true" :margin-top="10">
         <Button @click="onClickSaveData" label="save data" />
@@ -105,7 +110,8 @@ import { genLine } from "./core/Line";
 import Button from "./components/Button.vue";
 import { useDebounceFn, useManualRefHistory } from "@vueuse/core";
 const STORAGE_KEY = "__NODES_DATA__";
-
+const OFFSET_X = 150;
+const OFFSET_Y = 100;
 export default defineComponent({
   name: "App",
   components: { Vugel, TriggerNode, Lines, Button },
@@ -115,6 +121,7 @@ export default defineComponent({
       y: 0,
     });
     const scale = ref(1);
+    const autoLayout = ref(false);
     const nodes: Ref<Node[]> = ref(testData.map(genNode));
     const { commit, undo, redo, canUndo, canRedo, clear, reset } =
       useManualRefHistory(nodes, { clone: true, capacity: 20 });
@@ -137,15 +144,38 @@ export default defineComponent({
         stageOffset.y += movementY / scale.value;
       }
     };
+
+    const layout = (id?: string) => {
+      if (!id) return;
+      const layoutIds = [id];
+      let currId = layoutIds.shift();
+      while (currId) {
+        const currNode = unref(nodes).find((node) => node.id === currId);
+        if (!currNode) return;
+        const children = unref(nodes).filter(
+          (node) => node.parentId === currId
+        );
+        const count = children.length;
+        children.forEach((child, i) => {
+          child.x = currNode.x + OFFSET_X;
+          child.y = currNode.y + ((count - 1) * OFFSET_Y) / 2 - i * OFFSET_Y;
+          layoutIds.push(child.id);
+        });
+        currId = layoutIds.shift();
+      }
+    };
+
     const onMouseup = () => {
       const node = unref(nodes).find((i) => i.id === moveNodeId.value);
       if (node) {
         activeId.value = node.id;
         node.zIndex = 2;
+        unref(autoLayout) && layout(node.id);
         debouncedCommit();
       }
       moveNodeId.value = undefined;
     };
+
     const lines = computed(() => {
       return (
         unref(nodes).filter((node) => node.parentId) as Required<Node>[]
@@ -154,6 +184,7 @@ export default defineComponent({
         return genLine(node, parentNode);
       });
     });
+
     const onClickAddChild = () => {
       if (!activeId.value) return;
       const node = nodeMap.value.get(activeId.value) as Node;
@@ -182,6 +213,7 @@ export default defineComponent({
       unref(nodes).push(newNode);
       debouncedCommit();
     };
+
     const onClickAddSibling = () => {
       if (!activeId.value) return;
       const node = nodeMap.value.get(activeId.value);
@@ -278,6 +310,7 @@ export default defineComponent({
     };
 
     return {
+      autoLayout,
       stageOffset,
       scale,
       lines,
@@ -297,6 +330,7 @@ export default defineComponent({
       redo,
       canUndo,
       canRedo,
+      onClickLayout: () => layout(activeId.value),
     };
   },
 });
