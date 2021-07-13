@@ -1,5 +1,6 @@
 <template>
   <vugel
+    ref="stage"
     :settings="{ clearColor: 'null' }"
     style="width: 100%; height: 100%"
     @mousemove="onMousemove"
@@ -63,6 +64,7 @@
       :stageY="stageOffset.y"
       :scale="scale"
       :lines="lines"
+      :nodeMap="nodeMap"
     />
     <container
       :x="stageOffset.x * scale"
@@ -113,7 +115,7 @@ import { genLine } from "./core/Line";
 import Button from "./components/Button.vue";
 import { useDebounceFn, useManualRefHistory } from "@vueuse/core";
 const STORAGE_KEY = "__NODES_DATA__";
-const OFFSET_X = 150;
+const OFFSET_X = 50;
 const OFFSET_Y = 100;
 export default defineComponent({
   name: "App",
@@ -134,6 +136,7 @@ export default defineComponent({
     const nodeMap = computed(() => new Map(unref(nodes).map((i) => [i.id, i])));
     const moveNodeId: Ref<string | undefined> = ref();
     const activeId: Ref<string | undefined> = ref();
+    const stage = ref();
     const onMousemove = (e: MouseEvent) => {
       const { movementY, movementX } = e;
       if (moveNodeId.value) {
@@ -159,8 +162,9 @@ export default defineComponent({
           .filter((node) => node.parentId === currId)
           .sort((a, b) => b.y - a.y);
         const count = children.length;
+        const labelLen = currNode.label.trim().length;
         children.forEach((child, i) => {
-          child.x = currNode.x + OFFSET_X;
+          child.x = currNode.x + OFFSET_X + labelLen * 8;
           child.y = currNode.y + ((count - 1) * OFFSET_Y) / 2 - i * OFFSET_Y;
           layoutIds.push(child.id);
         });
@@ -344,6 +348,8 @@ export default defineComponent({
       canRedo,
       onClickLayout: () => layout(activeId.value),
       setLabel,
+      nodeMap,
+      stage,
     };
   },
 });
