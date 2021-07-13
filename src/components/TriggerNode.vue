@@ -3,6 +3,7 @@
     @mousedown="() => setMoveNodeId(id)"
     @click="() => setActiveId(id)"
     @dblclick="onDbClick"
+    cursor-type="move"
   >
     <styled-rectangle
       :x="x"

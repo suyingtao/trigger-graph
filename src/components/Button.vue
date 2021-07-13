@@ -10,6 +10,7 @@
     :z-index="100"
     @click="(e) => !disable && $emit('click', e)"
     :alpha="disable ? 0.1 : 1"
+    cursor-type="pointer"
   >
     <text :font-size="14" :font-weight="400" color="black">{{ label }}</text>
   </styled-rectangle>
