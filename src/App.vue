@@ -88,6 +88,7 @@
             i.zIndex = 3;
           }
         "
+        :setLabel="setLabel"
       />
     </container>
   </vugel>
@@ -314,6 +315,12 @@ export default defineComponent({
       debouncedCommit();
     };
 
+    const setLabel = (id: string, label: string) => {
+      const node = nodeMap.value.get(id);
+      if (!node) return;
+      node.label = label;
+    };
+
     return {
       autoLayout,
       stageOffset,
@@ -336,6 +343,7 @@ export default defineComponent({
       canUndo,
       canRedo,
       onClickLayout: () => layout(activeId.value),
+      setLabel,
     };
   },
 });

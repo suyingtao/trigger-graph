@@ -14,13 +14,17 @@
       :stroke-width="isActive ? 6 : 4"
       :stroke-color="isActive ? '#ff3300' : '#0099ff'"
     >
-      <text color="black" :font-size="14" :font-weight="400">{{ label }}</text>
+      <text color="black" :font-size="14" :font-weight="400" ref="text">{{
+        label
+      }}</text>
     </styled-rectangle>
   </container>
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from "vue";
+import { defineComponent, onUnmounted, PropType, Ref, ref } from "vue";
+import { Node } from "vugel";
+import { getNodeLayout } from "../utils/getNodeLayout";
 export default defineComponent({
   props: {
     x: { type: Number, default: 0 },
@@ -37,13 +41,44 @@ export default defineComponent({
       required: true,
       type: Function as PropType<(id: string) => void>,
     },
+    setLabel: {
+      required: true,
+      type: Function as PropType<(id: string, label: string) => void>,
+    },
   },
   setup(props) {
+    let inputEl: HTMLInputElement;
+    const text: Ref<Node | undefined> = ref();
     const onDbClick = () => {
-      console.log(1234);
+      const node = text.value;
+      if (!node) return;
+      if (!inputEl) {
+        inputEl = document.createElement("input");
+        inputEl.style.position = "fixed";
+        inputEl.style.zIndex = "-1";
+        inputEl.style.opacity = "0";
+        inputEl.addEventListener("blur", () => {
+          inputEl.style.display = "none";
+        });
+        inputEl.addEventListener("input", (e) => {
+          const value = (e.target as HTMLInputElement).value || "";
+          props.setLabel(props.id, value);
+        });
+        document.body.appendChild(inputEl);
+      }
+      const [x, y] = getNodeLayout(node);
+      inputEl.style.left = x + "px";
+      inputEl.style.top = y + "px";
+      inputEl.style.display = "";
+      inputEl.focus();
       props.setActiveId(props.id);
     };
-    return { onDbClick };
+    onUnmounted(() => {
+      if (inputEl) {
+        document.body.removeChild(inputEl);
+      }
+    });
+    return { onDbClick, text };
   },
 });
 </script>
