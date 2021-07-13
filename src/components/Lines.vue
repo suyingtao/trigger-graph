@@ -5,6 +5,7 @@
 </template>
 
 <script lang="ts">
+import { Line } from "@/core/Line";
 import { DrawingFunctionOptions } from "tree2d";
 import { defineComponent, PropType, Ref, ref, watch } from "vue";
 import type { Drawing } from "vugel";
@@ -18,9 +19,7 @@ export default defineComponent({
     stageY: { type: Number, default: 0 },
     scale: { type: Number, default: 0 },
     lines: {
-      type: Array as PropType<
-        { x: number; y: number; parentX: number; parentY: number }[]
-      >,
+      type: Array as PropType<Line[]>,
       default: () => [],
     },
   },

@@ -12,7 +12,7 @@
       :padding="8"
       :radius="8"
       :stroke-width="isActive ? 6 : 4"
-      :stroke-color="isActive ? '#ff3300' : '#0099ff'"
+      :stroke-color="typing ? 'orange' : isActive ? '#ff3300' : '#0099ff'"
     >
       <text color="black" :font-size="14" :font-weight="400" ref="text">{{
         label
@@ -49,6 +49,7 @@ export default defineComponent({
   setup(props) {
     let inputEl: HTMLInputElement;
     const text: Ref<Node | undefined> = ref();
+    const typing: Ref<boolean> = ref(false);
     const onDbClick = () => {
       const node = text.value;
       if (!node) return;
@@ -58,6 +59,7 @@ export default defineComponent({
         inputEl.style.zIndex = "-1";
         inputEl.style.opacity = "0";
         inputEl.addEventListener("blur", () => {
+          typing.value = false;
           inputEl.style.display = "none";
         });
         inputEl.addEventListener("input", (e) => {
@@ -70,6 +72,7 @@ export default defineComponent({
       inputEl.style.left = x + "px";
       inputEl.style.top = y + "px";
       inputEl.style.display = "";
+      typing.value = true;
       inputEl.focus();
       props.setActiveId(props.id);
     };
@@ -78,7 +81,7 @@ export default defineComponent({
         document.body.removeChild(inputEl);
       }
     });
-    return { onDbClick, text };
+    return { onDbClick, text, typing };
   },
 });
 </script>
