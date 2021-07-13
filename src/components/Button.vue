@@ -1,4 +1,4 @@
-<template>
+<template compiler="vugel">
   <styled-rectangle
     :flex="true"
     :flex-grow="0"
@@ -11,7 +11,7 @@
     @click="(e) => !disable && $emit('click', e)"
     :alpha="disable ? 0.1 : 1"
   >
-    <text :font-size="14" :font-weight="400">{{ label }}</text>
+    <text :font-size="14" :font-weight="400" color="black">{{ label }}</text>
   </styled-rectangle>
 </template>
 

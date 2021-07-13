@@ -1,4 +1,4 @@
-<template>
+<template compiler="vugel">
   <container
     @mousedown="() => setMoveNodeId(id)"
     @click="() => setActiveId(id)"
@@ -13,7 +13,7 @@
       :stroke-width="isActive ? 6 : 4"
       :stroke-color="isActive ? '#ff3300' : '#0099ff'"
     >
-      <text :font-size="14" :font-weight="400">{{ label }}</text>
+      <text color="black" :font-size="14" :font-weight="400">{{ label }}</text>
     </styled-rectangle>
   </container>
 </template>

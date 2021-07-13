@@ -7,13 +7,15 @@
     @mouseleave="onMouseleave"
   >
     <container x="20" y="20" :flex="true" flex-direction="column">
-      <text :font-size="14" :font-weight="400" :z-index="100">{{
+      <text color="black" :font-size="14" :font-weight="400" :z-index="100">{{
         "moving node id:" + moveNodeId
       }}</text>
-      <text :font-size="14" :font-weight="400" :z-index="100">{{
+      <text color="black" :font-size="14" :font-weight="400" :z-index="100">{{
         "selected node id:" + activeId
       }}</text>
-      <text :font-size="14" :font-weight="400">{{ "scale:" + scale }}</text>
+      <text color="black" :font-size="14" :font-weight="400">{{
+        "scale:" + scale
+      }}</text>
       <container :flex="true" :margin-top="10">
         <Button
           @click="scale = Math.min(10, (scale * 10 + 1) / 10)"
@@ -62,7 +64,7 @@
       :scale="scale"
       :lines="lines"
     />
-    <contaienr
+    <container
       :x="stageOffset.x * scale"
       :y="stageOffset.y * scale"
       :scale="scale"
@@ -87,7 +89,7 @@
           }
         "
       />
-    </contaienr>
+    </container>
   </vugel>
 </template>
 

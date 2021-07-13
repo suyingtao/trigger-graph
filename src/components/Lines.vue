@@ -1,4 +1,4 @@
-<template>
+<template compiler="vugel">
   <container>
     <drawing ref="drawingRef" :w="w" :h="h" @draw="draw" />
   </container>

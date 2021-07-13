@@ -1,5 +1,8 @@
 module.exports = {
   publicPath: "./",
+  configureWebpack: {
+    resolve: { symlinks: false },
+  },
   chainWebpack: (config) => {
     config.module
       .rule("vue")
