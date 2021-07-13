@@ -1,29 +1,9 @@
-# trigger-graph
+# TriggerGraph 💡
 
-## Project setup
-```
-npm install
-```
+    Trigger node editor powered by [Vue3](https://github.com/vuejs/vue-next) and [Vugel](https://github.com/Planning-nl/vugel)
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+- [Demo](http://verysao.com/trigger/)
 
-### Compiles and minifies for production
-```
-npm run build
-```
+## License
 
-### Run your unit tests
-```
-npm run test:unit
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+MIT
