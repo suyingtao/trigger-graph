@@ -1,6 +1,6 @@
 <template compiler="vugel">
   <container>
-    <drawing ref="drawingRef" :w="w" :h="h" @draw="draw" />
+    <drawing ref="drawingRef" :w="width" :h="height" @draw="draw" />
   </container>
 </template>
 
@@ -11,6 +11,7 @@ import { DrawingFunctionOptions } from "tree2d";
 import { defineComponent, PropType, Ref, ref, watch } from "vue";
 import type { Drawing } from "vugel";
 import { getStringLength } from "@/utils/getStringLength";
+import { useWindowSize } from "@vueuse/core";
 
 const OFFSET_Y = 15;
 const OFFSET_X = 8;
@@ -31,8 +32,7 @@ export default defineComponent({
   },
   setup(props) {
     const drawingRef: Ref<Drawing | null> = ref(null);
-    const w = document.body.clientWidth;
-    const h = document.body.clientHeight;
+    const { width, height } = useWindowSize();
     watch(props, () => {
       if (drawingRef.value) {
         drawingRef.value.update();
@@ -63,8 +63,8 @@ export default defineComponent({
         });
         return {};
       },
-      w,
-      h,
+      width,
+      height,
     };
   },
 });
