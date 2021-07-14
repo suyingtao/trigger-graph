@@ -90,7 +90,8 @@
             i.zIndex = 3;
           }
         "
-        :setLabel="setLabel"
+        @labelChange="(value) => setLabel(i.id, value)"
+        @inputBlur="() => layout(i.id)"
       />
     </container>
   </vugel>
@@ -110,13 +111,23 @@ import { Vugel } from "vugel";
 import TriggerNode from "./components/TriggerNode.vue";
 import Lines from "./components/Lines.vue";
 import { testData, testData2 } from "./mock";
-import { genNode, Node, NodeIdGenerator, NODE_ID_PREFIX } from "./core/Node";
-import { genLine } from "./core/Line";
+import {
+  genNode,
+  Node,
+  NodeIdGenerator,
+  NODE_ID_PREFIX,
+  layout,
+  deleteNode,
+  addSibling,
+  addParent,
+  addChild,
+} from "@/core/Node";
+import { genLine } from "@/core/Line";
 import Button from "./components/Button.vue";
 import { useDebounceFn, useManualRefHistory } from "@vueuse/core";
+
 const STORAGE_KEY = "__NODES_DATA__";
-const OFFSET_X = 50;
-const OFFSET_Y = 100;
+
 export default defineComponent({
   name: "App",
   components: { Vugel, TriggerNode, Lines, Button },
@@ -136,11 +147,10 @@ export default defineComponent({
     const nodeMap = computed(() => new Map(unref(nodes).map((i) => [i.id, i])));
     const moveNodeId: Ref<string | undefined> = ref();
     const activeId: Ref<string | undefined> = ref();
-    const stage = ref();
     const onMousemove = (e: MouseEvent) => {
       const { movementY, movementX } = e;
       if (moveNodeId.value) {
-        const node = nodeMap.value.get(moveNodeId.value) as Node;
+        const node = unref(nodeMap).get(moveNodeId.value) as Node;
         node.x += movementX / scale.value;
         node.y += movementY / scale.value;
         return;
@@ -151,33 +161,12 @@ export default defineComponent({
       }
     };
 
-    const layout = (id?: string) => {
-      if (!id) return;
-      const layoutIds = [id];
-      let currId = layoutIds.shift();
-      while (currId) {
-        const currNode = unref(nodes).find((node) => node.id === currId);
-        if (!currNode) return;
-        const children = unref(nodes)
-          .filter((node) => node.parentId === currId)
-          .sort((a, b) => b.y - a.y);
-        const count = children.length;
-        const labelLen = currNode.label.trim().length;
-        children.forEach((child, i) => {
-          child.x = currNode.x + OFFSET_X + labelLen * 8;
-          child.y = currNode.y + ((count - 1) * OFFSET_Y) / 2 - i * OFFSET_Y;
-          layoutIds.push(child.id);
-        });
-        currId = layoutIds.shift();
-      }
-    };
-
     const onMouseup = () => {
       const node = unref(nodes).find((i) => i.id === moveNodeId.value);
       if (node) {
         activeId.value = node.id;
         node.zIndex = 2;
-        unref(autoLayout) && layout(node.id);
+        unref(autoLayout) && layout(unref(nodes), node.id);
         debouncedCommit();
       }
       moveNodeId.value = undefined;
@@ -187,87 +176,33 @@ export default defineComponent({
       return (
         unref(nodes).filter((node) => node.parentId) as Required<Node>[]
       ).map((node) => {
-        const parentNode = nodeMap.value.get(node.parentId) as Node;
+        const parentNode = unref(nodeMap).get(node.parentId) as Node;
         return genLine(node, parentNode);
       });
     });
 
     const onClickAddChild = () => {
-      if (!activeId.value) return;
-      const node = nodeMap.value.get(activeId.value) as Node;
-      const children = unref(nodes).filter(
-        (i) => i.parentId === activeId.value
-      );
-      const x = (() => {
-        if (children.length) {
-          return Math.max(...children.map((i) => i.x));
-        }
-        return node.x + 100;
-      })();
-      const y = (() => {
-        if (children.length) {
-          return Math.max(...children.map((i) => i.y)) + 50;
-        }
-        return node.y - 50;
-      })();
-      const newNode = genNode({
-        x,
-        y,
-        zIndex: 1,
-        parentId: activeId.value,
-        label: "new node",
-      });
-      unref(nodes).push(newNode);
-      unref(autoLayout) && layout(node.id);
+      const id = unref(activeId);
+      if (!id) return;
+      addChild(unref(nodes), unref(nodeMap), id);
+      unref(autoLayout) && layout(unref(nodes), id);
       debouncedCommit();
     };
 
     const onClickAddSibling = () => {
-      if (!activeId.value) return;
-      const node = nodeMap.value.get(activeId.value);
-      if (!node?.parentId) {
-        return;
-      }
-      const parentNode = nodeMap.value.get(node.parentId) as Node;
-      const children = unref(nodes).filter((i) => i.parentId === parentNode.id);
-      const x = (() => {
-        if (children.length) {
-          return Math.max(...children.map((i) => i.x));
-        }
-        return node.x + 100;
-      })();
-      const y = (() => {
-        if (children.length) {
-          return Math.max(...children.map((i) => i.y)) + 50;
-        }
-        return node.y - 50;
-      })();
-      const newNode = genNode({
-        x,
-        y,
-        zIndex: 1,
-        parentId: parentNode.id,
-        label: "new node",
-      });
-      unref(nodes).push(newNode);
-      unref(autoLayout) && layout(parentNode.id);
+      const id = unref(activeId);
+      if (!id) return;
+      const [parentNodeId] = addSibling(unref(nodes), unref(nodeMap), id);
+      unref(autoLayout) && layout(unref(nodes), parentNodeId);
       debouncedCommit();
     };
+
     const onClickAddParent = () => {
-      if (!activeId.value) return;
-      const node = nodeMap.value.get(activeId.value);
-      if (!node) return;
-      const parentId = node.parentId;
-      const newParentNode = genNode({
-        x: node.x - 100,
-        y: node.y,
-        zIndex: 1,
-        label: "new node",
-      });
-      if (parentId) newParentNode.parentId = parentId;
-      node.parentId = newParentNode.id;
-      unref(nodes).push(newParentNode);
-      unref(autoLayout) && layout(parentId || node.parentId);
+      const id = unref(activeId);
+      if (!id) return;
+      const [oldParentNodeId] = addParent(unref(nodes), unref(nodeMap), id);
+      if (!oldParentNodeId) return;
+      unref(autoLayout) && layout(unref(nodes), oldParentNodeId);
       debouncedCommit();
     };
 
@@ -308,25 +243,15 @@ export default defineComponent({
     };
 
     const onClickDel = () => {
-      const index = unref(nodes).findIndex((i) => i.id === activeId.value);
-      unref(nodes).splice(index, 1);
-      const removedIds = [activeId.value];
-      while (removedIds.length) {
-        const curr = removedIds.shift();
-        for (let i = 0; i < unref(nodes).length; i++) {
-          if (unref(nodes)[i].parentId === curr) {
-            removedIds.push(unref(nodes)[i].id);
-            unref(nodes).splice(i, 1);
-            i--;
-          }
-        }
-      }
+      const id = unref(activeId);
+      if (!id) return;
+      deleteNode(unref(nodes), id);
       activeId.value = undefined;
       debouncedCommit();
     };
 
     const setLabel = (id: string, label: string) => {
-      const node = nodeMap.value.get(id);
+      const node = unref(nodeMap).get(id);
       if (!node) return;
       node.label = label;
     };
@@ -352,10 +277,15 @@ export default defineComponent({
       redo,
       canUndo,
       canRedo,
-      onClickLayout: () => layout(activeId.value),
+      onClickLayout: () => {
+        const id = unref(activeId);
+        if (!id) return;
+        return layout(unref(nodes), id);
+      },
       setLabel,
       nodeMap,
       loadTestData,
+      layout: (id: string) => layout(unref(nodes), id),
     };
   },
 });

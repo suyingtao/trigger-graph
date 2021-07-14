@@ -10,6 +10,7 @@ import { Node } from "@/core/Node";
 import { DrawingFunctionOptions } from "tree2d";
 import { defineComponent, PropType, Ref, ref, watch } from "vue";
 import type { Drawing } from "vugel";
+import { getStringLength } from "@/utils/getStringLength";
 
 const OFFSET_Y = 15;
 const OFFSET_X = 8;
@@ -47,9 +48,9 @@ export default defineComponent({
           ctx.moveTo(line.x + props.stageX, line.y + OFFSET_Y + props.stageY);
           ctx.strokeStyle = "grey";
           ctx.lineWidth = 2;
-          const parentLabelLen = props.nodeMap
-            .get(line.parentId)!
-            .label.trim().length;
+          const parentNode = props.nodeMap.get(line.parentId);
+          if (!parentNode) return {};
+          const parentLabelLen = getStringLength(parentNode.label.trim());
           ctx.bezierCurveTo(
             line.x + props.stageX,
             line.y + OFFSET_Y + props.stageY,

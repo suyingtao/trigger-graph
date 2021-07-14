@@ -41,12 +41,8 @@ export default defineComponent({
       required: true,
       type: Function as PropType<(id: string) => void>,
     },
-    setLabel: {
-      required: true,
-      type: Function as PropType<(id: string, label: string) => void>,
-    },
   },
-  setup(props) {
+  setup(props, { emit }) {
     let inputEl: HTMLInputElement;
     const text: Ref<Node | undefined> = ref();
     const typing: Ref<boolean> = ref(false);
@@ -61,10 +57,11 @@ export default defineComponent({
         inputEl.addEventListener("blur", () => {
           typing.value = false;
           inputEl.style.display = "none";
+          emit("inputBlur");
         });
         inputEl.addEventListener("input", (e) => {
           const value = (e.target as HTMLInputElement).value || "";
-          props.setLabel(props.id, value);
+          emit("labelChange", value);
         });
         document.body.appendChild(inputEl);
       }
@@ -73,6 +70,7 @@ export default defineComponent({
       inputEl.style.top = y + "px";
       inputEl.style.display = "";
       typing.value = true;
+      inputEl.value = props.label;
       inputEl.focus();
       props.setActiveId(props.id);
     };
