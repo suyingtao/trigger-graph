@@ -1,100 +1,105 @@
 <template>
-  <vugel
-    :settings="{ clearColor: 'null' }"
-    style="width: 100%; height: 100%"
-    @mousemove="onMousemove"
-    @mouseup="onMouseup"
-    @mouseleave="onMouseleave"
-  >
-    <container x="20" y="20" :flex="true" flex-direction="column">
-      <text color="black" :font-size="14" :font-weight="400" :z-index="100">{{
-        "moving node id:" + moveNodeId
-      }}</text>
-      <text color="black" :font-size="14" :font-weight="400" :z-index="100">{{
-        "selected node id:" + activeId
-      }}</text>
-      <text color="black" :font-size="14" :font-weight="400">{{
-        "scale:" + scale
-      }}</text>
-      <container :flex="true" :margin-top="10">
-        <Button
-          @click="scale = Math.min(10, (scale * 10 + 1) / 10)"
-          label="+scale"
-        />
-        <Button
-          @click="scale = Math.max(0.1, (scale * 10 - 1) / 10)"
-          label="-scale"
-        />
-      </container>
-      <container :flex="true" :margin-top="10">
-        <Button
-          @click="onClickAddParent"
-          :disable="!activeId"
-          label="add parent"
-        />
-        <Button
-          @click="onClickAddSibling"
-          :disable="!activeId"
-          label="add sibling"
-        />
-        <Button
-          @click="onClickAddChild"
-          :disable="!activeId"
-          label="add child"
-        />
-        <Button @click="onClickDel" :disable="!activeId" label="delete" />
-        <Button @click="onClickLayout" :disable="!activeId" label="layout" />
-        <Button
-          @click="autoLayout = !autoLayout"
-          :label="autoLayout ? 'stop auto layout' : 'start auto layout'"
-        />
-      </container>
-      <container :flex="true" :margin-top="10">
-        <Button @click="onClickSaveData" label="save data" />
-        <Button @click="onClickLoadData" label="load localStorage data" />
-        <Button @click="loadTestData" label="load test data" />
-      </container>
-      <container :flex="true" :margin-top="10">
-        <Button @click="undo" label="undo" :disable="!canUndo" />
-        <Button @click="redo" label="redo" :disable="!canRedo" />
-      </container>
-    </container>
-    <Lines
-      :stageX="stageOffset.x"
-      :stageY="stageOffset.y"
-      :scale="scale"
-      :lines="lines"
-      :nodeMap="nodeMap"
-    />
-    <container
-      :x="stageOffset.x * scale"
-      :y="stageOffset.y * scale"
-      :scale="scale"
+  <div style="width: 100%; height: 100%">
+    <vugel
+      :settings="{ clearColor: 'null' }"
+      style="width: 100%; height: 100%"
+      @mousemove="onMousemove"
+      @mouseup="onMouseup"
+      @mouseleave="onMouseleave"
     >
-      <TriggerNode
-        v-for="i in nodes"
-        :key="'node:' + i.id"
-        v-bind="i"
-        :z-index="i.zIndex"
-        :is-moving="moveNodeId === i.id"
-        :is-active="activeId === i.id"
-        :setActiveId="
-          (id) => {
-            activeId = id;
-            i.zIndex = 2;
-          }
-        "
-        :setMoveNodeId="
-          (id) => {
-            moveNodeId = id;
-            i.zIndex = 3;
-          }
-        "
-        @labelChange="(value) => setLabel(i.id, value)"
-        @inputBlur="() => layout(i.id)"
+      <container x="20" y="20" :flex="true" flex-direction="column">
+        <text color="black" :font-size="14" :font-weight="400" :z-index="100">{{
+          "moving node id:" + moveNodeId
+        }}</text>
+        <text color="black" :font-size="14" :font-weight="400" :z-index="100">{{
+          "selected node id:" + activeId
+        }}</text>
+        <text color="black" :font-size="14" :font-weight="400">{{
+          "scale:" + scale
+        }}</text>
+        <container :flex="true" :margin-top="10">
+          <Button
+            @click="scale = Math.min(10, (scale * 10 + 1) / 10)"
+            label="+scale"
+          />
+          <Button
+            @click="scale = Math.max(0.1, (scale * 10 - 1) / 10)"
+            label="-scale"
+          />
+        </container>
+        <container :flex="true" :margin-top="10">
+          <Button
+            @click="onClickAddParent"
+            :disable="!activeId"
+            label="add parent"
+          />
+          <Button
+            @click="onClickAddSibling"
+            :disable="!activeId"
+            label="add sibling"
+          />
+          <Button
+            @click="onClickAddChild"
+            :disable="!activeId"
+            label="add child"
+          />
+          <Button @click="onClickDel" :disable="!activeId" label="delete" />
+          <Button @click="onClickLayout" :disable="!activeId" label="layout" />
+          <Button
+            @click="autoLayout = !autoLayout"
+            :label="autoLayout ? 'stop auto layout' : 'start auto layout'"
+          />
+        </container>
+        <container :flex="true" :margin-top="10">
+          <Button @click="onClickSaveData" label="save data" />
+          <Button @click="onClickLoadData" label="load localStorage data" />
+          <Button @click="loadTestData" label="load test data" />
+        </container>
+        <container :flex="true" :margin-top="10">
+          <Button @click="undo" label="undo" :disable="!canUndo" />
+          <Button @click="redo" label="redo" :disable="!canRedo" />
+        </container>
+      </container>
+      <Lines
+        :stageX="stageOffset.x"
+        :stageY="stageOffset.y"
+        :scale="scale"
+        :lines="lines"
+        :nodeMap="nodeMap"
       />
-    </container>
-  </vugel>
+      <container
+        :x="stageOffset.x * scale"
+        :y="stageOffset.y * scale"
+        :scale="scale"
+      >
+        <TriggerNode
+          v-for="i in nodes"
+          :key="'node:' + i.id"
+          v-bind="i"
+          :z-index="i.zIndex"
+          :is-moving="moveNodeId === i.id"
+          :is-active="activeId === i.id"
+          :setActiveId="
+            (id) => {
+              activeId = id;
+              i.zIndex = 2;
+            }
+          "
+          :setMoveNodeId="
+            (id) => {
+              moveNodeId = id;
+              i.zIndex = 3;
+            }
+          "
+          @labelChange="(value) => setLabel(i.id, value)"
+          @inputBlur="() => layout(i.id)"
+        />
+      </container>
+    </vugel>
+    <teleport to="body">
+      <div v-if="isTyping" class="typing">You are typing now...</div>
+    </teleport>
+  </div>
 </template>
 
 <script lang="ts">
@@ -108,8 +113,8 @@ import {
   watch,
 } from "vue";
 import { Vugel } from "vugel";
-import TriggerNode from "./components/TriggerNode.vue";
-import Lines from "./components/Lines.vue";
+import TriggerNode, { isTyping } from "@/components/TriggerNode.vue";
+import Lines from "@/components/Lines.vue";
 import { testData, testData2 } from "./mock";
 import {
   genNode,
@@ -123,7 +128,7 @@ import {
   addChild,
 } from "@/core/Node";
 import { genLine } from "@/core/Line";
-import Button from "./components/Button.vue";
+import Button from "@/components/Button.vue";
 import { useDebounceFn, useManualRefHistory } from "@vueuse/core";
 
 const STORAGE_KEY = "__NODES_DATA__";
@@ -286,7 +291,27 @@ export default defineComponent({
       nodeMap,
       loadTestData,
       layout: (id: string) => layout(unref(nodes), id),
+      isTyping,
     };
   },
 });
 </script>
+<style scoped>
+.typing {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translate(-50%, 0);
+  padding: 0px 20px;
+  background: white;
+  color: #333;
+  font-size: 18px;
+  height: 40px;
+  line-height: 40px;
+  box-sizing: border-box;
+  border-radius: 6px;
+  text-align: center;
+  border: 1px solid orange;
+  display: inline-block;
+}
+</style>

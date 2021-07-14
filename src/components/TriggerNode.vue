@@ -25,6 +25,8 @@
 import { defineComponent, onUnmounted, PropType, Ref, ref } from "vue";
 import { Node } from "vugel";
 import { getNodeLayout } from "../utils/getNodeLayout";
+export const isTyping: Ref<boolean> = ref(false);
+
 export default defineComponent({
   props: {
     x: { type: Number, default: 0 },
@@ -56,6 +58,7 @@ export default defineComponent({
         inputEl.style.opacity = "0";
         inputEl.addEventListener("blur", () => {
           typing.value = false;
+          isTyping.value = false;
           inputEl.style.display = "none";
           emit("inputBlur");
         });
@@ -70,6 +73,7 @@ export default defineComponent({
       inputEl.style.top = y + "px";
       inputEl.style.display = "";
       typing.value = true;
+      isTyping.value = true;
       inputEl.value = props.label;
       inputEl.focus();
       props.setActiveId(props.id);
