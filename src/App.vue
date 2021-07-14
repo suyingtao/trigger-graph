@@ -1,6 +1,5 @@
 <template>
   <vugel
-    ref="stage"
     :settings="{ clearColor: 'null' }"
     style="width: 100%; height: 100%"
     @mousemove="onMousemove"
@@ -52,7 +51,8 @@
       </container>
       <container :flex="true" :margin-top="10">
         <Button @click="onClickSaveData" label="save data" />
-        <Button @click="onClickLoadData" label="load data" />
+        <Button @click="onClickLoadData" label="load localStorage data" />
+        <Button @click="loadTestData" label="load test data" />
       </container>
       <container :flex="true" :margin-top="10">
         <Button @click="undo" label="undo" :disable="!canUndo" />
@@ -109,7 +109,7 @@ import {
 import { Vugel } from "vugel";
 import TriggerNode from "./components/TriggerNode.vue";
 import Lines from "./components/Lines.vue";
-import { testData } from "./mock";
+import { testData, testData2 } from "./mock";
 import { genNode, Node, NodeIdGenerator, NODE_ID_PREFIX } from "./core/Node";
 import { genLine } from "./core/Line";
 import Button from "./components/Button.vue";
@@ -126,7 +126,7 @@ export default defineComponent({
       y: 0,
     });
     const scale = ref(1);
-    const autoLayout = ref(false);
+    const autoLayout = ref(true);
     const nodes: Ref<Node[]> = ref(testData.map(genNode));
     const { commit, undo, redo, canUndo, canRedo, clear, reset } =
       useManualRefHistory(nodes, { clone: true, capacity: 20 });
@@ -283,22 +283,28 @@ export default defineComponent({
       localStorage.setItem(STORAGE_KEY, JSON.stringify(unref(nodes)));
     };
 
+    const loadData = (nodesData: Node[]) => {
+      activeId.value = undefined;
+      const maxId = Math.max(
+        ...nodesData.map((node) => Number(node.id.slice(NODE_ID_PREFIX.length)))
+      );
+      NodeIdGenerator.setId(maxId);
+      unref(nodes).splice(0, unref(nodes).length, ...nodesData);
+      commit();
+      reset();
+      clear();
+    };
+
     const onClickLoadData = () => {
       const data = localStorage.getItem(STORAGE_KEY);
       if (data) {
         activeId.value = undefined;
-        const nodesData: Node[] = JSON.parse(data);
-        const maxId = Math.max(
-          ...nodesData.map((node) =>
-            Number(node.id.slice(NODE_ID_PREFIX.length))
-          )
-        );
-        NodeIdGenerator.setId(maxId);
-        unref(nodes).splice(0, unref(nodes).length, ...nodesData);
-        commit();
-        reset();
-        clear();
+        loadData(JSON.parse(data));
       }
+    };
+
+    const loadTestData = () => {
+      loadData(testData2);
     };
 
     const onClickDel = () => {
@@ -349,7 +355,7 @@ export default defineComponent({
       onClickLayout: () => layout(activeId.value),
       setLabel,
       nodeMap,
-      stage,
+      loadTestData,
     };
   },
 });
