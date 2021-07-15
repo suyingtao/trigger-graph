@@ -18,12 +18,15 @@
 
 <script setup lang="ts">
 import { toRefs } from "@vueuse/core";
-import { defineProps, defineEmits, unref } from "vue";
+import { defineProps, defineEmits, unref, withDefaults } from "vue";
 
-const props = defineProps({
-  label: { type: String, default: "" },
-  disable: { type: Boolean, default: false },
-});
+const props = withDefaults(
+  defineProps<{
+    label: string;
+    disable?: boolean;
+  }>(),
+  { disable: false, label: "" }
+);
 const { label, disable } = toRefs(props);
 const emit = defineEmits<{
   (event: "click", e: Event): void;

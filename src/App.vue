@@ -211,9 +211,8 @@ watch(activeId, (curr, prev) => {
   }
 });
 
-const onClickSaveData = () => {
+const onClickSaveData = () =>
   localStorage.setItem(STORAGE_KEY, JSON.stringify(unref(nodes)));
-};
 
 const loadData = (nodesData: Node[]) => {
   activeId.value = undefined;
@@ -235,16 +234,10 @@ const onClickLoadData = () => {
   }
 };
 
-const loadTestData1 = () => {
-  loadData(testData);
-};
+const loadTestData1 = () => loadData(testData);
 
-const loadTestData2 = () => {
-  loadData(testData2);
-};
-const loadTestData3 = () => {
-  loadData(testData3);
-};
+const loadTestData2 = () => loadData(testData2);
+const loadTestData3 = () => loadData(testData3);
 
 const onClickDel = () => {
   const id = unref(activeId);

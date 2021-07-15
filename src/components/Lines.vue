@@ -16,19 +16,13 @@ import { useWindowSize } from "@vueuse/core";
 
 const OFFSET_Y = 15;
 const OFFSET_X = 8;
-const props = defineProps({
-  stageX: { type: Number, default: 0 },
-  stageY: { type: Number, default: 0 },
-  scale: { type: Number, default: 0 },
-  lines: {
-    type: Array as PropType<Line[]>,
-    default: () => [],
-  },
-  nodeMap: {
-    type: Map as PropType<Map<string, Node>>,
-    default: () => [],
-  },
-});
+const props = defineProps<{
+  stageX: number;
+  stageY: number;
+  scale: number;
+  lines: Line[];
+  nodeMap: Map<string, Node>;
+}>();
 const drawingRef: Ref<Drawing | null> = ref(null);
 const { width, height } = useWindowSize();
 watch(props, () => {
