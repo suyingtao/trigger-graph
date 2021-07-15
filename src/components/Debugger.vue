@@ -18,7 +18,7 @@ let lastTime = Date.now();
 function loop() {
   const now = Date.now();
   frame++;
-  if (now > 1000 + lastTime) {
+  if (now > 500 + lastTime) {
     fps.value = Math.round((frame * 1000) / (now - lastTime));
     frame = 0;
     lastTime = now;
@@ -30,6 +30,7 @@ loop();
 
 <style scoped>
 .debugger {
+  pointer-events: none;
   position: fixed;
   bottom: 30px;
   left: 20px;

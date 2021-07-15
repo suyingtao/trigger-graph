@@ -31,15 +31,17 @@ import type { Ref } from "vue";
 import { Node } from "vugel";
 import { getNodeLayout } from "../utils/getNodeLayout";
 
-const props = defineProps({
-  x: { type: Number, default: 0 },
-  y: { type: Number, default: 0 },
-  id: { type: String, required: true },
-  label: { type: String, default: "empty" },
-  isMoving: { type: Boolean, default: false },
-  isActive: { type: Boolean, default: false },
-});
-const id = toRefs(props).id;
+const props = defineProps<{
+  x: number;
+  y: number;
+  stageX: number;
+  stageY: number;
+  scale: number;
+  id: string;
+  label: string;
+  isMoving: boolean;
+  isActive: boolean;
+}>();
 const emit = defineEmits<{
   (event: "labelChange", value: string): void;
   (event: "inputBlur"): void;
@@ -57,7 +59,9 @@ const onDbClick = () => {
     inputEl = document.createElement("input");
     inputEl.style.position = "fixed";
     inputEl.style.zIndex = "-1";
+    inputEl.style.width = "100%";
     inputEl.style.opacity = "0";
+    inputEl.style.transformOrigin = "left top";
     inputEl.addEventListener("blur", () => {
       typing.value = false;
       isTyping.value = false;
@@ -70,15 +74,20 @@ const onDbClick = () => {
     });
     document.body.appendChild(inputEl);
   }
+  // x = props.stageX * props.scale + props.x + padding
+  // y = props.stageY * props.scale + props.y + padding
   const [x, y] = getNodeLayout(node);
-  inputEl.style.left = x + "px";
-  inputEl.style.top = y + "px";
+  const left = x * props.scale + props.stageX * (1 - props.scale) * props.scale;
+  const top = y * props.scale + props.stageY * (1 - props.scale) * props.scale;
+  inputEl.style.left = left + "px";
+  inputEl.style.top = top + "px";
+  inputEl.style.transform = `scale(${props.scale})`;
   inputEl.style.display = "";
   typing.value = true;
   isTyping.value = true;
   inputEl.value = props.label;
   inputEl.focus();
-  emit("active", unref(id));
+  emit("active", props.id);
 };
 onUnmounted(() => {
   if (inputEl) {

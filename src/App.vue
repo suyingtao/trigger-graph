@@ -7,10 +7,19 @@
       @mouseup="onMouseup"
       @mouseleave="onMouseleave"
     >
-      <container x="20" y="20" :flex="true" flex-direction="column">
+      <container
+        x="20"
+        y="20"
+        :flex="true"
+        flex-direction="column"
+        :z-index="100"
+      >
         <text color="black" :font-size="14" :font-weight="400" :z-index="100">{{
           "moving node id:" + moveNodeId
         }}</text>
+        <text color="black" :font-size="14" :font-weight="400" :z-index="100"
+          >stageOffset: {{ stageOffset }}</text
+        >
         <text color="black" :font-size="14" :font-weight="400" :z-index="100">{{
           "selected node id:" + activeId
         }}</text>
@@ -79,8 +88,11 @@
           :key="'node:' + i.id"
           v-bind="i"
           :z-index="i.zIndex"
+          :stageX="stageOffset.x"
+          :stageY="stageOffset.y"
           :is-moving="moveNodeId === i.id"
           :is-active="activeId === i.id"
+          :scale="scale"
           @active="
             (id) => {
               activeId = id;
