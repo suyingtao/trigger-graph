@@ -3,8 +3,8 @@ import { getStringLength } from "@/utils/getStringLength";
 
 export const NODE_ID_PREFIX = "node_";
 export const NodeIdGenerator = new IdGenerator(NODE_ID_PREFIX);
-const OFFSET_X = 50;
-const OFFSET_Y = 100;
+const OFFSET_X = 80;
+const OFFSET_Y = 120;
 
 export interface Node {
   id: string;

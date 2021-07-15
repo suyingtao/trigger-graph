@@ -8,7 +8,7 @@
     :stroke-width="3"
     stroke-color="#000"
     :z-index="100"
-    @click="(e) => !disable && $emit('click', e)"
+    @click="onClick"
     :alpha="disable ? 0.1 : 1"
     cursor-type="pointer"
   >
@@ -16,14 +16,19 @@
   </styled-rectangle>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
+<script setup lang="ts">
+import { toRefs } from "@vueuse/core";
+import { defineProps, defineEmits, unref } from "vue";
 
-export default defineComponent({
-  props: {
-    label: { type: String, default: "" },
-    disable: { type: Boolean, default: false },
-  },
-  emits: ["click"],
+const props = defineProps({
+  label: { type: String, default: "" },
+  disable: { type: Boolean, default: false },
 });
+const { label, disable } = toRefs(props);
+const emit = defineEmits<{
+  (event: "click", e: Event): void;
+}>();
+const onClick = (e: Event) => {
+  !unref(disable) && emit("click", e);
+};
 </script>

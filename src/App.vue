@@ -53,7 +53,9 @@
         <container :flex="true" :margin-top="10">
           <Button @click="onClickSaveData" label="save data" />
           <Button @click="onClickLoadData" label="load localStorage data" />
-          <Button @click="loadTestData" label="load test data" />
+          <Button @click="loadTestData1" label="load test data1" />
+          <Button @click="loadTestData2" label="load test data2" />
+          <Button @click="loadTestData3" label="load test data3" />
         </container>
         <container :flex="true" :margin-top="10">
           <Button @click="undo" label="undo" :disable="!canUndo" />
@@ -92,30 +94,24 @@
             }
           "
           @labelChange="(value) => setLabel(i.id, value)"
-          @inputBlur="() => layout(i.id)"
+          @inputBlur="() => manualLayout(i.id)"
         />
       </container>
     </vugel>
     <teleport to="body">
       <div v-if="isTyping" class="typing">You are typing now...</div>
     </teleport>
+    <Debugger :count="nodes.length" />
   </div>
 </template>
 
-<script lang="ts">
-import {
-  computed,
-  defineComponent,
-  reactive,
-  Ref,
-  ref,
-  unref,
-  watch,
-} from "vue";
+<script setup lang="ts">
+import { computed, reactive, ref, unref, watch } from "vue";
+import type { Ref } from "vue";
 import { Vugel } from "vugel";
 import TriggerNode, { isTyping } from "@/components/TriggerNode.vue";
 import Lines from "@/components/Lines.vue";
-import { testData, testData2 } from "./mock";
+import { testData, testData2, testData3 } from "./mock";
 import {
   genNode,
   Node,
@@ -130,171 +126,147 @@ import {
 import { genLine } from "@/core/Line";
 import Button from "@/components/Button.vue";
 import { useDebounceFn, useManualRefHistory } from "@vueuse/core";
-
+import Debugger from "@/components/Debugger.vue";
 const STORAGE_KEY = "__NODES_DATA__";
-
-export default defineComponent({
-  name: "App",
-  components: { Vugel, TriggerNode, Lines, Button },
-  setup() {
-    const stageOffset = reactive({
-      x: 0,
-      y: 0,
-    });
-    const scale = ref(1);
-    const autoLayout = ref(true);
-    const nodes: Ref<Node[]> = ref(testData.map(genNode));
-    const { commit, undo, redo, canUndo, canRedo, clear, reset } =
-      useManualRefHistory(nodes, { clone: true, capacity: 20 });
-    const debouncedCommit = useDebounceFn(() => {
-      commit();
-    }, 300);
-    const nodeMap = computed(() => new Map(unref(nodes).map((i) => [i.id, i])));
-    const moveNodeId: Ref<string | undefined> = ref();
-    const activeId: Ref<string | undefined> = ref();
-    const onMousemove = (e: MouseEvent) => {
-      const { movementY, movementX } = e;
-      if (moveNodeId.value) {
-        const node = unref(nodeMap).get(moveNodeId.value) as Node;
-        node.x += movementX / scale.value;
-        node.y += movementY / scale.value;
-        return;
-      }
-      if (e.buttons === 1) {
-        stageOffset.x += movementX / scale.value;
-        stageOffset.y += movementY / scale.value;
-      }
-    };
-
-    const onMouseup = () => {
-      const node = unref(nodes).find((i) => i.id === moveNodeId.value);
-      if (node) {
-        activeId.value = node.id;
-        node.zIndex = 2;
-        unref(autoLayout) && layout(unref(nodes), node.id);
-        debouncedCommit();
-      }
-      moveNodeId.value = undefined;
-    };
-
-    const lines = computed(() => {
-      return (
-        unref(nodes).filter((node) => node.parentId) as Required<Node>[]
-      ).map((node) => {
-        const parentNode = unref(nodeMap).get(node.parentId) as Node;
-        return genLine(node, parentNode);
-      });
-    });
-
-    const onClickAddChild = () => {
-      const id = unref(activeId);
-      if (!id) return;
-      addChild(unref(nodes), unref(nodeMap), id);
-      unref(autoLayout) && layout(unref(nodes), id);
-      debouncedCommit();
-    };
-
-    const onClickAddSibling = () => {
-      const id = unref(activeId);
-      if (!id) return;
-      const [parentNodeId] = addSibling(unref(nodes), unref(nodeMap), id);
-      unref(autoLayout) && layout(unref(nodes), parentNodeId);
-      debouncedCommit();
-    };
-
-    const onClickAddParent = () => {
-      const id = unref(activeId);
-      if (!id) return;
-      const [oldParentNodeId] = addParent(unref(nodes), unref(nodeMap), id);
-      if (!oldParentNodeId) return;
-      unref(autoLayout) && layout(unref(nodes), oldParentNodeId);
-      debouncedCommit();
-    };
-
-    watch(activeId, (curr, prev) => {
-      if (!prev) return;
-      const node = unref(nodes).find((i) => i.id === prev);
-      if (node) {
-        node.zIndex = 1;
-      }
-    });
-
-    const onClickSaveData = () => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(unref(nodes)));
-    };
-
-    const loadData = (nodesData: Node[]) => {
-      activeId.value = undefined;
-      const maxId = Math.max(
-        ...nodesData.map((node) => Number(node.id.slice(NODE_ID_PREFIX.length)))
-      );
-      NodeIdGenerator.setId(maxId);
-      unref(nodes).splice(0, unref(nodes).length, ...nodesData);
-      commit();
-      reset();
-      clear();
-    };
-
-    const onClickLoadData = () => {
-      const data = localStorage.getItem(STORAGE_KEY);
-      if (data) {
-        activeId.value = undefined;
-        loadData(JSON.parse(data));
-      }
-    };
-
-    const loadTestData = () => {
-      loadData(testData2);
-    };
-
-    const onClickDel = () => {
-      const id = unref(activeId);
-      if (!id) return;
-      deleteNode(unref(nodes), id);
-      activeId.value = undefined;
-      debouncedCommit();
-    };
-
-    const setLabel = (id: string, label: string) => {
-      const node = unref(nodeMap).get(id);
-      if (!node) return;
-      node.label = label;
-    };
-
-    return {
-      autoLayout,
-      stageOffset,
-      scale,
-      lines,
-      nodes,
-      moveNodeId,
-      activeId,
-      onMousemove,
-      onMouseup,
-      onMouseleave: onMouseup,
-      onClickAddChild,
-      onClickAddParent,
-      onClickAddSibling,
-      onClickSaveData,
-      onClickLoadData,
-      onClickDel,
-      undo,
-      redo,
-      canUndo,
-      canRedo,
-      onClickLayout: () => {
-        const id = unref(activeId);
-        if (!id) return;
-        return layout(unref(nodes), id);
-      },
-      setLabel,
-      nodeMap,
-      loadTestData,
-      layout: (id: string) => layout(unref(nodes), id),
-      isTyping,
-    };
-  },
+const stageOffset = reactive({
+  x: 0,
+  y: 0,
 });
+const scale = ref(1);
+const autoLayout = ref(true);
+const nodes: Ref<Node[]> = ref(testData.map(genNode));
+const { commit, undo, redo, canUndo, canRedo, clear, reset } =
+  useManualRefHistory(nodes, { clone: true, capacity: 20 });
+const debouncedCommit = useDebounceFn(() => {
+  commit();
+}, 300);
+const nodeMap = computed(() => new Map(unref(nodes).map((i) => [i.id, i])));
+const moveNodeId: Ref<string | undefined> = ref();
+const activeId: Ref<string | undefined> = ref();
+const onMousemove = (e: MouseEvent) => {
+  const { movementY, movementX } = e;
+  if (moveNodeId.value) {
+    const node = unref(nodeMap).get(moveNodeId.value) as Node;
+    node.x += movementX / scale.value;
+    node.y += movementY / scale.value;
+    return;
+  }
+  if (e.buttons === 1) {
+    stageOffset.x += movementX / scale.value;
+    stageOffset.y += movementY / scale.value;
+  }
+};
+
+const onMouseup = () => {
+  const node = unref(nodes).find((i) => i.id === moveNodeId.value);
+  if (node) {
+    activeId.value = node.id;
+    node.zIndex = 2;
+    unref(autoLayout) && layout(unref(nodes), node.id);
+    debouncedCommit();
+  }
+  moveNodeId.value = undefined;
+};
+const onMouseleave = onMouseup;
+
+const lines = computed(() => {
+  return (unref(nodes).filter((node) => node.parentId) as Required<Node>[]).map(
+    (node) => {
+      const parentNode = unref(nodeMap).get(node.parentId) as Node;
+      return genLine(node, parentNode);
+    }
+  );
+});
+
+const onClickAddChild = () => {
+  const id = unref(activeId);
+  if (!id) return;
+  addChild(unref(nodes), unref(nodeMap), id);
+  unref(autoLayout) && layout(unref(nodes), id);
+  debouncedCommit();
+};
+
+const onClickAddSibling = () => {
+  const id = unref(activeId);
+  if (!id) return;
+  const [parentNodeId] = addSibling(unref(nodes), unref(nodeMap), id);
+  unref(autoLayout) && layout(unref(nodes), parentNodeId);
+  debouncedCommit();
+};
+
+const onClickAddParent = () => {
+  const id = unref(activeId);
+  if (!id) return;
+  const [oldParentNodeId] = addParent(unref(nodes), unref(nodeMap), id);
+  if (!oldParentNodeId) return;
+  unref(autoLayout) && layout(unref(nodes), oldParentNodeId);
+  debouncedCommit();
+};
+
+watch(activeId, (curr, prev) => {
+  if (!prev) return;
+  const node = unref(nodes).find((i) => i.id === prev);
+  if (node) {
+    node.zIndex = 1;
+  }
+});
+
+const onClickSaveData = () => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(unref(nodes)));
+};
+
+const loadData = (nodesData: Node[]) => {
+  activeId.value = undefined;
+  const maxId = Math.max(
+    ...nodesData.map((node) => Number(node.id.slice(NODE_ID_PREFIX.length)))
+  );
+  NodeIdGenerator.setId(maxId);
+  unref(nodes).splice(0, unref(nodes).length, ...nodesData);
+  commit();
+  reset();
+  clear();
+};
+
+const onClickLoadData = () => {
+  const data = localStorage.getItem(STORAGE_KEY);
+  if (data) {
+    activeId.value = undefined;
+    loadData(JSON.parse(data));
+  }
+};
+
+const loadTestData1 = () => {
+  loadData(testData);
+};
+
+const loadTestData2 = () => {
+  loadData(testData2);
+};
+const loadTestData3 = () => {
+  loadData(testData3);
+};
+
+const onClickDel = () => {
+  const id = unref(activeId);
+  if (!id) return;
+  deleteNode(unref(nodes), id);
+  activeId.value = undefined;
+  debouncedCommit();
+};
+
+const setLabel = (id: string, label: string) => {
+  const node = unref(nodeMap).get(id);
+  if (!node) return;
+  node.label = label;
+};
+
+const onClickLayout = () => {
+  const id = unref(activeId);
+  if (!id) return;
+  return layout(unref(nodes), id);
+};
+
+const manualLayout = (id: string) => layout(unref(nodes), id);
 </script>
 <style scoped>
 .typing {
