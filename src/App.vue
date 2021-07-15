@@ -81,26 +81,24 @@
           :z-index="i.zIndex"
           :is-moving="moveNodeId === i.id"
           :is-active="activeId === i.id"
-          :setActiveId="
+          @active="
             (id) => {
               activeId = id;
               i.zIndex = 2;
             }
           "
-          :setMoveNodeId="
+          @moving="
             (id) => {
               moveNodeId = id;
               i.zIndex = 3;
             }
           "
-          @labelChange="(value) => setLabel(i.id, value)"
-          @inputBlur="() => manualLayout(i.id)"
+          @labelChange="setLabel(i.id, $event)"
+          @inputBlur="manualLayout(i.id)"
         />
       </container>
     </vugel>
-    <teleport to="body">
-      <div v-if="isTyping" class="typing">You are typing now...</div>
-    </teleport>
+    <Typing />
     <Debugger :count="nodes.length" />
   </div>
 </template>
@@ -109,7 +107,7 @@
 import { computed, reactive, ref, unref, watch } from "vue";
 import type { Ref } from "vue";
 import { Vugel } from "vugel";
-import TriggerNode, { isTyping } from "@/components/TriggerNode.vue";
+import TriggerNode from "@/components/TriggerNode.vue";
 import Lines from "@/components/Lines.vue";
 import { testData, testData2, testData3 } from "./mock";
 import {
@@ -127,6 +125,8 @@ import { genLine } from "@/core/Line";
 import Button from "@/components/Button.vue";
 import { useDebounceFn, useManualRefHistory } from "@vueuse/core";
 import Debugger from "@/components/Debugger.vue";
+import Typing from "@/components/Typing.vue";
+
 const STORAGE_KEY = "__NODES_DATA__";
 const stageOffset = reactive({
   x: 0,
@@ -143,6 +143,24 @@ const debouncedCommit = useDebounceFn(() => {
 const nodeMap = computed(() => new Map(unref(nodes).map((i) => [i.id, i])));
 const moveNodeId: Ref<string | undefined> = ref();
 const activeId: Ref<string | undefined> = ref();
+
+watch(activeId, (curr, prev) => {
+  if (!prev) return;
+  const node = unref(nodes).find((i) => i.id === prev);
+  if (node) {
+    node.zIndex = 1;
+  }
+});
+
+const lines = computed(() => {
+  return (unref(nodes).filter((node) => node.parentId) as Required<Node>[]).map(
+    (node) => {
+      const parentNode = unref(nodeMap).get(node.parentId) as Node;
+      return genLine(node, parentNode);
+    }
+  );
+});
+
 const onMousemove = (e: MouseEvent) => {
   const { movementY, movementX } = e;
   if (moveNodeId.value) {
@@ -169,15 +187,6 @@ const onMouseup = () => {
 };
 const onMouseleave = onMouseup;
 
-const lines = computed(() => {
-  return (unref(nodes).filter((node) => node.parentId) as Required<Node>[]).map(
-    (node) => {
-      const parentNode = unref(nodeMap).get(node.parentId) as Node;
-      return genLine(node, parentNode);
-    }
-  );
-});
-
 const onClickAddChild = () => {
   const id = unref(activeId);
   if (!id) return;
@@ -203,14 +212,6 @@ const onClickAddParent = () => {
   debouncedCommit();
 };
 
-watch(activeId, (curr, prev) => {
-  if (!prev) return;
-  const node = unref(nodes).find((i) => i.id === prev);
-  if (node) {
-    node.zIndex = 1;
-  }
-});
-
 const onClickSaveData = () =>
   localStorage.setItem(STORAGE_KEY, JSON.stringify(unref(nodes)));
 
@@ -233,9 +234,7 @@ const onClickLoadData = () => {
     loadData(JSON.parse(data));
   }
 };
-
 const loadTestData1 = () => loadData(testData);
-
 const loadTestData2 = () => loadData(testData2);
 const loadTestData3 = () => loadData(testData3);
 
@@ -261,22 +260,3 @@ const onClickLayout = () => {
 
 const manualLayout = (id: string) => layout(unref(nodes), id);
 </script>
-<style scoped>
-.typing {
-  position: fixed;
-  bottom: 30px;
-  left: 50%;
-  transform: translate(-50%, 0);
-  padding: 0px 20px;
-  background: white;
-  color: #333;
-  font-size: 18px;
-  height: 40px;
-  line-height: 40px;
-  box-sizing: border-box;
-  border-radius: 6px;
-  text-align: center;
-  border: 1px solid orange;
-  display: inline-block;
-}
-</style>

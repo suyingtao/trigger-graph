@@ -1,7 +1,7 @@
 <template compiler="vugel">
   <container
-    @mousedown="() => setMoveNodeId(id)"
-    @click="() => setActiveId(id)"
+    @mousedown="$emit('moving', id)"
+    @click="$emit('active', id)"
     @dblclick="onDbClick"
     cursor-type="move"
   >
@@ -26,8 +26,8 @@ export const isTyping: Ref<boolean> = ref(false);
 </script>
 
 <script setup lang="ts">
-import { onUnmounted, ref, defineProps, defineEmits, defineExpose } from "vue";
-import type { PropType, Ref } from "vue";
+import { onUnmounted, ref, defineProps, defineEmits, toRefs, unref } from "vue";
+import type { Ref } from "vue";
 import { Node } from "vugel";
 import { getNodeLayout } from "../utils/getNodeLayout";
 
@@ -37,19 +37,14 @@ const props = defineProps({
   id: { type: String, required: true },
   label: { type: String, default: "empty" },
   isMoving: { type: Boolean, default: false },
-  setMoveNodeId: {
-    required: true,
-    type: Function as PropType<(id: string) => void>,
-  },
   isActive: { type: Boolean, default: false },
-  setActiveId: {
-    required: true,
-    type: Function as PropType<(id: string) => void>,
-  },
 });
+const id = toRefs(props).id;
 const emit = defineEmits<{
   (event: "labelChange", value: string): void;
   (event: "inputBlur"): void;
+  (event: "active", id: string): void;
+  (event: "moving", id: string): void;
 }>();
 
 let inputEl: HTMLInputElement;
@@ -83,7 +78,7 @@ const onDbClick = () => {
   isTyping.value = true;
   inputEl.value = props.label;
   inputEl.focus();
-  props.setActiveId(props.id);
+  emit("active", unref(id));
 };
 onUnmounted(() => {
   if (inputEl) {
