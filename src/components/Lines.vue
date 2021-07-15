@@ -9,7 +9,7 @@ import type { Line } from "@/core/Line";
 import { Node } from "@/core/Node";
 import type { DrawingFunctionOptions } from "tree2d";
 import { ref, watch, defineProps } from "vue";
-import type { PropType, Ref } from "vue";
+import type { Ref } from "vue";
 import type { Drawing } from "vugel";
 import { getStringLength } from "@/utils/getStringLength";
 import { useWindowSize } from "@vueuse/core";

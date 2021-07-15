@@ -22,12 +22,14 @@
 </template>
 
 <script lang="ts">
+import { ref } from "vue";
+import type { Ref } from "vue";
+
 export const isTyping: Ref<boolean> = ref(false);
 </script>
 
 <script setup lang="ts">
-import { onUnmounted, ref, defineProps, defineEmits, toRefs, unref } from "vue";
-import type { Ref } from "vue";
+import { onUnmounted, defineProps, defineEmits } from "vue";
 import { Node } from "vugel";
 import { getNodeLayout } from "../utils/getNodeLayout";
 
