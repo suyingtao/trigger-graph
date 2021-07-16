@@ -8,10 +8,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, toRefs } from "vue";
-
+import { ref, defineProps } from "vue";
 const props = defineProps<{ count: number }>();
-const count = toRefs(props).count;
 const fps = ref(0);
 let frame = 0;
 let lastTime = Date.now();

@@ -17,7 +17,6 @@
 </template>
 
 <script setup lang="ts">
-import { toRefs } from "@vueuse/core";
 import { defineProps, defineEmits, unref, withDefaults } from "vue";
 
 const props = withDefaults(
@@ -27,11 +26,10 @@ const props = withDefaults(
   }>(),
   { disable: false, label: "" }
 );
-const { label, disable } = toRefs(props);
 const emit = defineEmits<{
   (event: "click", e: Event): void;
 }>();
 const onClick = (e: Event) => {
-  !unref(disable) && emit("click", e);
+  !unref(props.disable) && emit("click", e);
 };
 </script>

@@ -11,6 +11,7 @@
       :flex="true"
       :padding="8"
       :radius="8"
+      :alpha="isMoving ? 0.5 : 1"
       :stroke-width="isActive ? 6 : 4"
       :stroke-color="typing ? 'orange' : isActive ? '#ff3300' : '#0099ff'"
       @setup="setup"
