@@ -13,6 +13,7 @@
       :radius="8"
       :stroke-width="isActive ? 6 : 4"
       :stroke-color="typing ? 'orange' : isActive ? '#ff3300' : '#0099ff'"
+      @setup="setup"
     >
       <text color="black" :font-size="14" :font-weight="400" ref="text">{{
         label
@@ -31,6 +32,7 @@ export const isTyping: Ref<boolean> = ref(false);
 <script setup lang="ts">
 import { onUnmounted, defineProps, defineEmits } from "vue";
 import { Node } from "vugel";
+import type { VugelNodeEventListener } from "vugel";
 import { getNodeLayout } from "../utils/getNodeLayout";
 
 const props = defineProps<{
@@ -50,6 +52,9 @@ const emit = defineEmits<{
   (event: "active", id: string): void;
   (event: "moving", id: string): void;
 }>();
+const setup: VugelNodeEventListener = ({ element, stage }) => {
+  element.id = props.id;
+};
 
 let inputEl: HTMLInputElement;
 const text: Ref<Node | undefined> = ref();

@@ -35,6 +35,13 @@
             @click="scale = Math.max(0.1, (scale * 10 - 1) / 10)"
             label="-scale"
           />
+          <Button
+            @click="
+              stageOffset.x = 0;
+              stageOffset.y = 0;
+            "
+            label="goto origin point"
+          />
         </container>
         <container :flex="true" :margin-top="10">
           <Button
