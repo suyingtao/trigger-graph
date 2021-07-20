@@ -1,5 +1,7 @@
 <template compiler="vugel">
   <container
+    @mouseenter="isHover = true"
+    @mouseleave="isHover = false"
     @mousedown="$emit('moving', id)"
     @click="$emit('active', id)"
     @dblclick="onDbClick"
@@ -12,6 +14,7 @@
       :padding="8"
       :radius="8"
       :alpha="isMoving ? 0.5 : 1"
+      :line-dash="isHover ? [6, 6] : undefined"
       :stroke-width="isActive ? 6 : 4"
       :stroke-color="typing ? 'orange' : isActive ? '#ff3300' : '#0099ff'"
       @setup="setup"
@@ -56,6 +59,7 @@ const emit = defineEmits<{
 const setup: VugelNodeEventListener = ({ element, stage }) => {
   element.id = props.id;
 };
+const isHover = ref(false);
 
 let inputEl: HTMLInputElement;
 const text: Ref<Node | undefined> = ref();
