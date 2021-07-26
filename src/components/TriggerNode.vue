@@ -3,6 +3,7 @@
     @mouseenter="isHover = true"
     @mouseleave="isHover = false"
     @mousedown="$emit('moving', id)"
+    @mouseup="onMouseup"
     @click="$emit('active', id)"
     @dblclick="onDbClick"
     cursor-type="move"
@@ -13,8 +14,8 @@
       :flex="true"
       :padding="8"
       :radius="8"
-      :alpha="isMoving ? 0.5 : 1"
-      :line-dash="isHover ? [6, 6] : undefined"
+      :alpha="isMoving || dropable ? 0.5 : 1"
+      :line-dash="isHover || isMoving ? [6, 6] : undefined"
       :stroke-width="isActive ? 6 : 4"
       :stroke-color="typing ? 'orange' : isActive ? '#ff3300' : '#0099ff'"
       @setup="setup"
@@ -27,7 +28,7 @@
 </template>
 
 <script lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import type { Ref } from "vue";
 
 export const isTyping: Ref<boolean> = ref(false);
@@ -46,6 +47,7 @@ const props = defineProps<{
   stageY: number;
   scale: number;
   id: string;
+  movingNodeId?: string;
   label: string;
   isMoving: boolean;
   isActive: boolean;
@@ -55,6 +57,7 @@ const emit = defineEmits<{
   (event: "inputBlur"): void;
   (event: "active", id: string): void;
   (event: "moving", id: string): void;
+  (event: "drop"): void;
 }>();
 const setup: VugelNodeEventListener = ({ element, stage }) => {
   element.id = props.id;
@@ -106,4 +109,15 @@ onUnmounted(() => {
     document.body.removeChild(inputEl);
   }
 });
+
+const dropable = computed(() => {
+  return !!(isHover.value && props.movingNodeId && !props.isMoving);
+});
+
+const onMouseup = () => {
+  if (!dropable.value) {
+    return;
+  }
+  emit("drop");
+};
 </script>

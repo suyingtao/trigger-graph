@@ -10759,8 +10759,7 @@ vue-jest@^5.0.0-0:
     source-map "0.5.6"
     tsconfig "^7.0.0"
 
-"vue-loader-v16@npm:vue-loader@^16.1.0", vue-loader@^16.3.0:
-  name vue-loader-v16
+"vue-loader-v16@npm:vue-loader@^16.1.0":
   version "16.3.0"
   resolved "https://registry.nlark.com/vue-loader/download/vue-loader-16.3.0.tgz?cache=0&sync_timestamp=1624996813170&other_urls=https%3A%2F%2Fregistry.nlark.com%2Fvue-loader%2Fdownload%2Fvue-loader-16.3.0.tgz#2f195e4ba0fb0e263596d6830df17d1a36e8936c"
   integrity sha1-LxleS6D7DiY1ltaDDfF9Gjbok2w=
@@ -10779,6 +10778,15 @@ vue-loader@^15.9.2:
     loader-utils "^1.1.0"
     vue-hot-reload-api "^2.3.0"
     vue-style-loader "^4.1.0"
+
+vue-loader@^16.3.1:
+  version "16.3.1"
+  resolved "http://192.168.14.11:8888/vue-loader/-/vue-loader-16.3.1.tgz#5b675ae28ac97080111e93b26d22adca36dd57aa"
+  integrity sha1-W2da4orJcIARHpOybSKtyjbdV6o=
+  dependencies:
+    chalk "^4.1.0"
+    hash-sum "^2.0.0"
+    loader-utils "^2.0.0"
 
 vue-style-loader@^4.1.0, vue-style-loader@^4.1.2:
   version "4.1.3"

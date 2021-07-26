@@ -8,6 +8,7 @@
       @mouseleave="onMouseleave"
     >
       <container
+        @setup="setup"
         x="20"
         y="20"
         :flex="true"
@@ -98,6 +99,7 @@
           :stageX="stageOffset.x"
           :stageY="stageOffset.y"
           :is-moving="moveNodeId === i.id"
+          :moving-node-id="moveNodeId"
           :is-active="activeId === i.id"
           :scale="scale"
           @active="
@@ -109,11 +111,12 @@
           @moving="
             (id) => {
               moveNodeId = id;
-              i.zIndex = 3;
+              i.zIndex = 0;
             }
           "
           @labelChange="setLabel(i.id, $event)"
           @inputBlur="manualLayout(i.id)"
+          @drop="onDrop(i.id)"
         />
       </container>
     </vugel>
@@ -139,12 +142,15 @@ import {
   addSibling,
   addParent,
   addChild,
+  moveNode,
 } from "@/core/Node";
 import { genLine } from "@/core/Line";
 import Button from "@/components/Button.vue";
 import { useDebounceFn, useManualRefHistory } from "@vueuse/core";
 import Debugger from "@/components/Debugger.vue";
 import Typing from "@/components/Typing.vue";
+import type { VugelStage } from "vugel/dist/wrapper";
+import type { VugelNodeEventListener } from "vugel";
 
 const STORAGE_KEY = "__NODES_DATA__";
 const stageOffset = reactive({
@@ -163,6 +169,10 @@ const nodeMap = computed(() => new Map(unref(nodes).map((i) => [i.id, i])));
 const moveNodeId: Ref<string | undefined> = ref();
 const activeId: Ref<string | undefined> = ref();
 
+const stageRef = ref<VugelStage>();
+const setup: VugelNodeEventListener = ({ stage }) => {
+  stageRef.value = stage;
+};
 watch(activeId, (curr, prev) => {
   if (!prev) return;
   const node = unref(nodes).find((i) => i.id === prev);
@@ -235,6 +245,14 @@ const onClickSaveData = () =>
   localStorage.setItem(STORAGE_KEY, JSON.stringify(unref(nodes)));
 
 const loadData = (nodesData: Node[]) => {
+  const stage = unref(stageRef);
+  unref(nodes).forEach((node) => {
+    if (!stage) return;
+    const el = stage.getById(node.id);
+    if (!el) return;
+    stage.removeId(node.id, el);
+  });
+
   activeId.value = undefined;
   const maxId = Math.max(
     ...nodesData.map((node) => Number(node.id.slice(NODE_ID_PREFIX.length)))
@@ -278,4 +296,10 @@ const onClickLayout = () => {
 };
 
 const manualLayout = (id: string) => layout(unref(nodes), id);
+const onDrop = (id: string) => {
+  const fromId = unref(moveNodeId);
+  if (!fromId) return;
+  moveNode(unref(nodes), unref(nodeMap), fromId, id);
+  manualLayout(id);
+};
 </script>

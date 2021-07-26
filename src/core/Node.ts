@@ -141,3 +141,28 @@ export const addChild = (
   });
   nodes.push(newNode);
 };
+
+export const moveNode = (
+  nodes: Node[],
+  nodeMap: Map<string, Node>,
+  from: string,
+  to: string
+) => {
+  const fromNode = nodeMap.get(from) as Node;
+  const toNode = nodeMap.get(to) as Node;
+  const parentId = fromNode.parentId;
+  if (!parentId) return;
+  const childrenMap = new Map<Node, boolean>();
+  const walkList = [fromNode];
+  let curr = walkList.shift();
+  while (curr) {
+    const children = nodes.filter(
+      (node) => node.parentId === (curr as Node).id
+    );
+    children.forEach((node) => childrenMap.set(node, true));
+    walkList.push(...children);
+    curr = walkList.shift();
+  }
+  if (childrenMap.has(toNode)) return;
+  fromNode.parentId = to;
+};
